@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "ai-engine-sdk-py"
+version = "0.1.0"
+description = ""
+authors = ["Xavier <xavier.peiro@fetch.ai>"]
+readme = "README.md"
+packages = [{include="*", from="ai_engine_sdk_py"}]
+
+[tool.poetry.dependencies]
+python = "~3.11"
+pydantic = "^2.7.3"
+aiohttp = "^3.9.5"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
