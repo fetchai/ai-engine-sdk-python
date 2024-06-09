@@ -51,7 +51,6 @@ class ApiStartMessage(ApiMessagePayload):
     bucket_id: str
 
 
-
 class ApiUserJsonMessage(ApiMessagePayload):
     type: Literal[ApiMessagePayloadTypes.USER_JSON] = ApiMessagePayloadTypes.USER_JSON
 

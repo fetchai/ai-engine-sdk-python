@@ -11,7 +11,7 @@ from api_models.api_models import (
     ApiNewSessionRequest,
     ApiSubmitMessage,
     is_api_context_json,
-    is_api_task_list
+    is_api_task_list, ApiStartMessage, ApiMessagePayload, ApiUserJsonMessage, ApiUserMessageMessage
 )
 from llm_models import (
     CustomModel,
@@ -82,63 +82,70 @@ class Session:
         self._messages: List[ApiMessage] = []
         self._message_ids: set[str] = set()
 
-    async def _submit_message(self, payload: ApiSubmitMessage):
+    async def _submit_message(self, payload: ApiMessagePayload):
         await make_api_request(
             api_base_url=self._api_base_url,
             api_key=self._api_key,
             method='POST',
             endpoint=f"/v1beta1/engine/chat/sessions/{self.session_id}/submit",
-            payload={'payload': payload}
+            payload={'payload': payload.dict()}
         )
 
     async def start(self, objective: str, context: Optional[str] = None):
-        await self._submit_message(payload={
-            'type': 'start',
-            'session_id': self.session_id,
-            'bucket_id': self.function_group,
-            'message_id': str(uuid4()).lower(),
-            'objective': objective,
-            'context': context or ''
-        })
+        await self._submit_message(
+            payload=ApiStartMessage.parse_obj({
+                'session_id': self.session_id,
+                'bucket_id': self.function_group,
+                'message_id': str(uuid4()).lower(),
+                'objective': objective,
+                'context': context or ''
+            })
+        )
 
     async def submit_task_selection(self, selection: TaskSelectionMessage, options: List[TaskOption]):
-        await self._submit_message({
-            'type': 'user_json',
-            'session_id': self.session_id,
-            'message_id': str(uuid4()).lower(),
-            'referral_id': selection.id,
-            'user_json': {
-                'type': 'task_list',
-                'selection': [o.key for o in options],
-            },
-        })
+        await self._submit_message(
+            payload=ApiUserJsonMessage.parse_obj({
+                'session_id': self.session_id,
+                'message_id': str(uuid4()).lower(),
+                'referral_id': selection.id,
+                'user_json': {
+                    'type': 'task_list',
+                    'selection': [o.key for o in options],
+                }
+            })
+        )
 
     async def submit_response(self, query: AgentMessage, response: str):
-        await self._submit_message({
-            'type': 'user_message',
-            'session_id': self.session_id,
-            'message_id': str(uuid4()).lower(),
-            'referral_id': query.id,
-            'user_message': response
-        })
+        await self._submit_message(
+            payload=ApiUserMessageMessage.parse_obj(
+                {
+                    'session_id': self.session_id,
+                    'message_id': str(uuid4()).lower(),
+                    'referral_id': query.id,
+                    'user_message': response
+                }
+            )
+        )
 
     async def submit_confirmation(self, confirmation: ConfirmationMessage):
-        await self._submit_message({
-            'type': 'user_message',
-            'session_id': self.session_id,
-            'message_id': str(uuid4()).lower(),
-            'referral_id': confirmation.id,
-            'user_message': 'confirm'
-        })
+        await self._submit_message(
+            payload=ApiUserMessageMessage.parse_obj({
+                'session_id': self.session_id,
+                'message_id': str(uuid4()).lower(),
+                'referral_id': confirmation.id,
+                'user_message': 'confirm'
+            })
+        )
 
     async def reject_confirmation(self, confirmation: ConfirmationMessage, reason: str):
-        await self._submit_message({
-            'type': 'user_message',
-            'session_id': self.session_id,
-            'message_id': str(uuid4()).lower(),
-            'referral_id': confirmation.id,
-            'user_message': reason
-        })
+        await self._submit_message(
+            payload=ApiUserMessageMessage.parse_obj({
+                'session_id': self.session_id,
+                'message_id': str(uuid4()).lower(),
+                'referral_id': confirmation.id,
+                'user_message': reason
+            })
+        )
 
     async def get_messages(self) -> List[Message]:
         # TODO: set endpoints in a common place
@@ -152,7 +159,7 @@ class Session:
 
         newMessages: List[Message] = []
         for item in response['agent_response']:
-            message: ApiMessage = json.loads(item)
+            message: dict = json.loads(item)
             if message['message_id'] in self._message_ids:
                 continue
 
@@ -250,8 +257,13 @@ class AiEngine:
             )
         )
 
-    async def get_private_function_groups(self) -> List[FunctionGroup]:
-        return await make_api_request(self._api_base_url, self._api_key, 'GET', "/v1beta1/function-groups/")
+    async def get_private_function_groups(self) -> dict:
+        return await make_api_request(
+            api_base_url=self._api_base_url,
+            api_key=self._api_key,
+            method='GET',
+            endpoint="/v1beta1/function-groups/"
+        )
 
     async def get_credits(self) -> CreditBalance:
         response = await make_api_request(self._api_base_url, self._api_key, 'GET', "/v1beta1/engine/credit/info")
@@ -282,8 +294,12 @@ class AiEngine:
 
     async def get_model_credits(self, model: Union[KnownModelId, CustomModel]) -> int:
         model_id = get_model_id(model)
-        response = await make_api_request(self._api_base_url, self._api_key, 'GET',
-                                          f"/v1beta1/engine/credit/remaining_tokens?models={model_id}")
+        response = await make_api_request(
+            api_base_url=self._api_base_url,
+            api_key=self._api_key,
+            method='GET',
+            endpoint=f"/v1beta1/engine/credit/remaining_tokens?models={model_id}"
+        )
         return response['model_tokens'].get(model_id, 0)
 
     async def create_session(self, function_group: str, opts: Optional[dict] = None) -> Session:
