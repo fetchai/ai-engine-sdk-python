@@ -309,7 +309,12 @@ class AiEngine:
             preferencesEnabled=False,
             requestModel=opts.get('model') if opts and 'model' in opts else DefaultModelId
         )
-        response = await make_api_request(self._api_base_url, self._api_key, 'POST', "/v1beta1/engine/chat/sessions",
-                                          request_payload.dict())
+        response = await make_api_request(
+            api_base_url=self._api_base_url,
+            api_key=self._api_key,
+            method='POST',
+            endpoint="/v1beta1/engine/chat/sessions",
+            payload=request_payload.dict()
+        )
 
         return Session(self._api_base_url, self._api_key, response['session_id'], function_group)
