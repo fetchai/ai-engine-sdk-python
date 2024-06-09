@@ -3,6 +3,9 @@ from pydantic import BaseModel
 from datetime import datetime
 
 
+# TODO: This is, apparently, request models.
+# TODO: Ideally, create entities (data class) and models (representation, serializers).
+#  Nontheless, unnecessary right now
 class BaseMessage(BaseModel):
     id: str
     type: str
@@ -41,6 +44,7 @@ class StopMessage(BaseMessage):
     type: str = "stop"
 
 
+# TODO: change this for
 Message = Union[
     TaskSelectionMessage,
     AiEngineMessage,

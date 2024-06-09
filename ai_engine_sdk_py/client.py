@@ -6,19 +6,16 @@ import json
 from typing import Optional, List, Dict, Union, Any
 from uuid import uuid4
 
-from api_models import (
-    ApiMessage,
+from api_models.api_models import (
     ApiNewSessionRequest,
     ApiNewSessionResponse,
     ApiNewMessages,
     ApiSubmitMessage,
-    is_api_agent_info_message,
-    is_api_agent_json_message,
-    is_api_agent_message_message,
     is_api_context_json,
-    is_api_stop_message,
-    is_api_task_list
+    is_api_task_list, ApiTaskList
 )
+from api_models.api_message import is_api_agent_json_message, is_api_agent_info_message, \
+    is_api_agent_message_message, is_api_stop_message, ApiMessage
 
 from messages import (
     AgentMessage,
@@ -58,8 +55,13 @@ class FunctionGroup(BaseModel):
     isPrivate: bool
 
 
-async def make_api_request(api_base_url: str, api_key: str, method: str, endpoint: str,
-                           payload: Optional[dict] = None) -> Any:
+async def make_api_request(
+        api_base_url: str,
+        api_key: str,
+        method: str,
+        endpoint: str,
+        payload: Optional[dict] = None
+) -> dict:
     body = json.dumps(payload) if payload else None
 
     headers = {
@@ -85,8 +87,13 @@ class Session:
         self._message_ids: set[str] = set()
 
     async def _submit_message(self, payload: ApiSubmitMessage):
-        await make_api_request(self._api_base_url, self._api_key, 'POST',
-                               f"/v1beta1/engine/chat/sessions/{self.session_id}/submit", {'payload': payload})
+        await make_api_request(
+            api_base_url=self._api_base_url,
+            api_key=self._api_key,
+            method='POST',
+            endpoint=f"/v1beta1/engine/chat/sessions/{self.session_id}/submit",
+            payload={'payload': payload}
+        )
 
     async def start(self, objective: str, context: Optional[str] = None):
         await self._submit_message({
@@ -138,9 +145,14 @@ class Session:
         })
 
     async def get_messages(self) -> List[Message]:
+        # TODO: set endpoints in a common place
         queryParams = f"?last_message_id={self._messages[-1]['message_id']}" if self._messages else ""
-        response = await make_api_request(self._api_base_url, self._api_key, 'GET',
-                                          f"/v1beta1/engine/chat/sessions/{self.session_id}/new-messages{queryParams}")
+        response = await make_api_request(
+            api_base_url=self._api_base_url,
+            api_key=self._api_key,
+            method='GET',
+            endpoint=f"/v1beta1/engine/chat/sessions/{self.session_id}/new-messages{queryParams}"
+        )
 
         newMessages: List[Message] = []
         for item in response['agent_response']:
@@ -148,47 +160,60 @@ class Session:
             if message['message_id'] in self._message_ids:
                 continue
 
+            # TODO: apply factory (or builder) and add typing
             if is_api_agent_json_message(message):
                 if is_api_task_list(message['agent_json']):
-                    newMessages.append({
-                        'id': message['message_id'],
-                        'type': "task_selection",
-                        'timestamp': message['timestamp'],
-                        'text': message['agent_json']['text'],
-                        'options': [{'key': o['key'], 'title': o['value']} for o in message['agent_json']['options']],
-                    })
+                    newMessages.append(
+                        TaskSelectionMessage.parse_obj({
+                            'id': message['message_id'],
+                            'type': "task_selection",
+                            'timestamp': message['timestamp'],
+                            'text': message['agent_json']['text'],
+                            'options': [{'key': o['key'], 'title': o['value']} for o in
+                                        message['agent_json']['options']],
+                        })
+                    )
                 elif is_api_context_json(message['agent_json']):
-                    newMessages.append({
-                        'id': message['message_id'],
-                        'type': "confirmation",
-                        'timestamp': message['timestamp'],
-                        'text': message['agent_json']['text'],
-                        'model': message['agent_json']['context_json']['digest'],
-                        'payload': message['agent_json']['context_json']['args'],
-                    })
+                    newMessages.append(
+                        ConfirmationMessage.parse_obj({
+                            'id': message['message_id'],
+                            'type': "confirmation",
+                            'timestamp': message['timestamp'],
+                            'text': message['agent_json']['text'],
+                            'model': message['agent_json']['context_json']['digest'],
+                            'payload': message['agent_json']['context_json']['args'],
+                        })
+                    )
                 else:
+                    # TODO: implement date type: pending-unknown-json-to implement/date-type.json
                     print(f"UNKNOWN-JSON: {message}")
             elif is_api_agent_info_message(message):
-                newMessages.append({
-                    'id': message['message_id'],
-                    'type': 'ai-engine',
-                    'timestamp': message['timestamp'],
-                    'text': message['agent_info'],
-                })
+                newMessages.append(
+                    AiEngineMessage.parse_obj({
+                        'id': message['message_id'],
+                        'type': 'ai-engine',
+                        'timestamp': message['timestamp'],
+                        'text': message['agent_info'],
+                    })
+                )
             elif is_api_agent_message_message(message):
-                newMessages.append({
-                    'id': message['message_id'],
-                    'type': 'agent',
-                    'timestamp': message['timestamp'],
-                    'text': message['agent_message'],
-                })
+                newMessages.append(
+                    AgentMessage.parse_obj({
+                        'id': message['message_id'],
+                        'type': 'agent',
+                        'timestamp': message['timestamp'],
+                        'text': message['agent_message'],
+                    })
+                )
             elif is_api_stop_message(message):
                 print(f"STOP: {message}")
-                newMessages.append({
-                    'id': message['message_id'],
-                    'timestamp': message['timestamp'],
-                    'type': 'stop',
-                })
+                newMessages.append(
+                    StopMessage.parse_obj({
+                        'id': message['message_id'],
+                        'timestamp': message['timestamp'],
+                        'type': 'stop',
+                    })
+                )
             else:
                 print(f"UNKNOWN: {message}")
 
@@ -199,8 +224,12 @@ class Session:
         return newMessages
 
     async def delete(self):
-        await make_api_request(self._api_base_url, self._api_key, 'DELETE',
-                               f"/v1beta1/engine/chat/sessions/{self.session_id}")
+        await make_api_request(
+            api_base_url=self._api_base_url,
+            api_key=self._api_key,
+            method='DELETE',
+            endpoint=f"/v1beta1/engine/chat/sessions/{self.session_id}"
+        )
 
 
 class AiEngine:
@@ -216,7 +245,14 @@ class AiEngine:
         return privateGroups + publicGroups
 
     async def get_public_function_groups(self) -> List[FunctionGroup]:
-        return await make_api_request(self._api_base_url, self._api_key, 'GET', "/v1beta1/function-groups/public/")
+        raw_response: dict = await make_api_request(self._api_base_url, self._api_key, 'GET',
+                                                    "/v1beta1/function-groups/public/")
+        return list(
+            map(
+                lambda item: FunctionGroup.parse_obj(item),
+                raw_response
+            )
+        )
 
     async def get_private_function_groups(self) -> List[FunctionGroup]:
         return await make_api_request(self._api_base_url, self._api_key, 'GET', "/v1beta1/function-groups/")

@@ -2,7 +2,7 @@ import os
 import asyncio
 # from aioconsole import ainput
 
-from client import AiEngine
+from client import AiEngine, FunctionGroup
 from messages import (
     is_task_selection_message,
     is_agent_message,
@@ -10,6 +10,10 @@ from messages import (
     is_confirmation_message,
     is_stop_message
 )
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 api_key = os.getenv("AV_API_KEY", "")
 
@@ -21,13 +25,16 @@ async def snooze(ms: int):
 async def main():
     ai_engine = AiEngine(api_key)
 
-    function_groups = await ai_engine.get_function_groups()
+    function_groups: list[FunctionGroup]= await ai_engine.get_function_groups()
+
     public_group = next((g for g in function_groups if g.name == "Fetch Verified"), None)
     if public_group is None:
         raise Exception('Could not find "Public" function group.')
 
+    # TODO: proper function group, not hardcoded
     # Assuming '523a7194-214f-48fd-b5be-b0e953cc35a3' is meant to be used:
-    session = await ai_engine.create_session("523a7194-214f-48fd-b5be-b0e953cc35a3")
+    session = await ai_engine.create_session(function_group="523a7194-214f-48fd-b5be-b0e953cc35a3")
+    # TODO: no magic strings
     objective = input("What is your objective: ")
     await session.start(objective)
 
@@ -88,7 +95,10 @@ async def main():
             # Chilling for 1.2 seconds...
             await snooze(1200)
     except Exception as e:
+        logger.debug(f"Unhandled exception: {e}")
         print("Error", e)
+        # TODO: should this be raised?
+        raise e
     finally:
         # clean up the session
         await session.delete()

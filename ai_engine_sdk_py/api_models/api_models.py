@@ -2,6 +2,9 @@ from typing import List, Union, Dict, Any, Optional
 from pydantic import BaseModel
 
 
+# TODO: This is, apparently, response models..
+# TODO: Ideally, create entities (data class) and models (representation, serializers).
+#  Nontheless, innecessary right now
 class ApiNewSessionRequest(BaseModel):
     email: str
     functionGroup: Optional[str] = None
@@ -67,6 +70,12 @@ class ApiNewMessages(BaseModel):
     agent_response: List[str]
 
 
+
+
+
+# TODO : missing fields and
+# TODO: Change base class
+#  id, type, timestamp
 class ApiAgentJson(BaseModel):
     type: str
 
@@ -90,72 +99,12 @@ class ApiContextJson(BaseModel):
     context_json: Dict[str, Any]
 
 
-class ApiAgentJsonMessage(BaseModel):
-    session_id: Optional[str] = None
-    message_id: str
-    timestamp: str
-    score: int
-    referral_id: Optional[str] = None
-    type: str = "agent_json"
-    agent_json: Union[ApiAgentJson, ApiContextJson]
+def is_api_task_list(d: dict) -> bool:
+    return d["type"] == "task_list"
 
 
-class ApiAgentInfoMessage(BaseModel):
-    session_id: Optional[str] = None
-    message_id: str
-    timestamp: str
-    score: int
-    referral_id: Optional[str] = None
-    type: str = "agent_info"
-    agent_info: str
+def is_api_context_json(d: dict) -> bool:
+    return d["type"] == "context_json"
 
 
-class ApiAgentMessageMessage(BaseModel):
-    session_id: Optional[str] = None
-    message_id: str
-    timestamp: str
-    score: int
-    referral_id: Optional[str] = None
-    type: str = "agent_message"
-    agent_message: str
 
-
-class ApiStopMessage(BaseModel):
-    type: str = "stop"
-    session_id: str
-    message_id: str
-    timestamp: str
-    score: int
-    referral_id: str
-
-
-ApiMessage = Union[
-    ApiAgentJsonMessage,
-    ApiStopMessage,
-    ApiAgentInfoMessage,
-    ApiAgentMessageMessage
-]
-
-
-def is_api_task_list(obj: ApiAgentJson) -> bool:
-    return obj.type == "task_list"
-
-
-def is_api_context_json(obj: ApiAgentJson) -> bool:
-    return obj.type == "context_json"
-
-
-def is_api_agent_json_message(m: ApiMessage) -> bool:
-    return m.type == "agent_json"
-
-
-def is_api_agent_info_message(m: ApiMessage) -> bool:
-    return m.type == "agent_info"
-
-
-def is_api_agent_message_message(m: ApiMessage) -> bool:
-    return m.type == "agent_message"
-
-
-def is_api_stop_message(m: ApiMessage) -> bool:
-    return m.type == "stop"
