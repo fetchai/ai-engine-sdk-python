@@ -1,4 +1,5 @@
-from typing import List, Union, Dict, Any, Optional
+from enum import StrEnum
+from typing import List, Union, Dict, Any, Optional, Literal
 from pydantic import BaseModel
 
 
@@ -25,8 +26,24 @@ class ApiNewSessionResponse(BaseModel):
     preferences_enabled: bool
 
 
-class ApiStartMessage(BaseModel):
-    type: str = "start"
+class ApiSelectedTasks(BaseModel):
+    type: str = "task_list"
+    selection: List[int]
+
+
+class ApiMessagePayload(BaseModel):
+    ...
+
+
+class ApiMessagePayloadTypes(StrEnum):
+    START = "start"
+    USER_JSON = "user_json"
+    USER_MESSAGE = "user_message"
+
+
+class ApiStartMessage(ApiMessagePayload):
+    type: Literal[ApiMessagePayloadTypes.START] = ApiMessagePayloadTypes.START
+
     session_id: str
     objective: str
     message_id: str
@@ -34,32 +51,35 @@ class ApiStartMessage(BaseModel):
     bucket_id: str
 
 
-class ApiSelectedTasks(BaseModel):
-    type: str = "task_list"
-    selection: List[int]
 
+class ApiUserJsonMessage(ApiMessagePayload):
+    type: Literal[ApiMessagePayloadTypes.USER_JSON] = ApiMessagePayloadTypes.USER_JSON
 
-class ApiUserJsonMessage(BaseModel):
-    type: str = "user_json"
     session_id: str
     message_id: str
     referral_id: str
     user_json: ApiSelectedTasks
 
 
-class ApiUserMessageMessage(BaseModel):
-    type: str = "user_message"
+class ApiUserMessageMessage(ApiMessagePayload):
+    type: Literal[ApiMessagePayloadTypes.USER_MESSAGE] = ApiMessagePayloadTypes.USER_MESSAGE
+
     session_id: str
     message_id: str
     referral_id: str
     user_message: str
 
 
-ApiMessagePayload = Union[
-    ApiStartMessage,
-    ApiUserJsonMessage,
-    ApiUserMessageMessage
-]
+# ApiMessagePayload = Union[
+#     ApiStartMessage,
+#     ApiUserJsonMessage,
+#     ApiUserMessageMessage
+# ]
+
+
+class ApiMessageTypes(StrEnum):
+    TAKS_LIST = "task_list"
+    CONTEXT_JSON = "context_json"
 
 
 class ApiSubmitMessage(BaseModel):
@@ -86,14 +106,14 @@ class ApiOption(BaseModel):
 
 
 class ApiTaskList(ApiAgentJson):
-    type: str = "task_list"
+    type: Literal[ApiMessageTypes.TAKS_LIST] = ApiMessageTypes.TAKS_LIST
     text: str
     options: List[ApiOption]
     context_json: Optional[Any] = None
 
 
 class ApiContextJson(BaseModel):
-    type: str = "context_json"
+    type: Literal[ApiMessageTypes.CONTEXT_JSON] = ApiMessageTypes.CONTEXT_JSON
     text: str
     options: Optional[None] = None
     context_json: Dict[str, Any]

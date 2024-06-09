@@ -7,6 +7,13 @@ from pydantic_core.core_schema import JsonType
 from api_models.api_models import ApiAgentJson, ApiContextJson
 
 
+class ApiMessageType(StrEnum):
+    AGENT_JSON = "agent_json"
+    AGENT_MESSAGE = "agent_message"
+    AGENT_STOP = "stop"
+    AGENT_INFO = "agent_info"
+
+
 class ApiMessage(BaseModel):
     session_id: Optional[str] = None
     id: str  # uuid
@@ -41,7 +48,7 @@ class ApiStopMessage(ApiMessage):
 
 
 class ApiAgentJsonMessage(ApiMessage):
-    type: str = "agent_json"
+    type: Literal[ApiMessageType.AGENT_JSON] = ApiMessageType.AGENT_JSON
 
     message_id: str
     score: int
@@ -57,18 +64,11 @@ class ApiAgentJsonMessage(ApiMessage):
 # ]
 #
 
-class ApiMessageType(StrEnum):
-    agent_json = "agent_json"
-    agent_message = "agent_message"
-    agent_stop = "stop"
-    agent_info = "agent_info"
-
-
 _type_map: dict[str, type[ApiMessage]] = {
-    ApiMessageType.agent_json: ApiAgentJsonMessage,
-    ApiMessageType.agent_message: ApiAgentMessageMessage,
-    ApiMessageType.agent_info: ApiAgentInfoMessage,
-    ApiMessageType.agent_stop: ApiStopMessage,
+    ApiMessageType.AGENT_JSON: ApiAgentJsonMessage,
+    ApiMessageType.AGENT_MESSAGE: ApiAgentMessageMessage,
+    ApiMessageType.AGENT_INFO: ApiAgentInfoMessage,
+    ApiMessageType.AGENT_STOP: ApiStopMessage,
 }
 
 

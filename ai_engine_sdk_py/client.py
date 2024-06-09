@@ -1,30 +1,18 @@
-from messages import *
-
-import aiohttp
 import asyncio
 import json
-from typing import Optional, List, Dict, Union, Any
+from typing import Optional, List, Union
 from uuid import uuid4
 
-from api_models.api_models import (
-    ApiNewSessionRequest,
-    ApiNewSessionResponse,
-    ApiNewMessages,
-    ApiSubmitMessage,
-    is_api_context_json,
-    is_api_task_list, ApiTaskList
-)
+import aiohttp
+
 from api_models.api_message import is_api_agent_json_message, is_api_agent_info_message, \
     is_api_agent_message_message, is_api_stop_message, ApiMessage
-
-from messages import (
-    AgentMessage,
-    ConfirmationMessage,
-    Message,
-    TaskOption,
-    TaskSelectionMessage
+from api_models.api_models import (
+    ApiNewSessionRequest,
+    ApiSubmitMessage,
+    is_api_context_json,
+    is_api_task_list
 )
-
 from llm_models import (
     CustomModel,
     DefaultModelId,
@@ -32,6 +20,14 @@ from llm_models import (
     get_model_id,
     get_model_name,
     KnownModelId
+)
+from messages import *
+from messages import (
+    AgentMessage,
+    ConfirmationMessage,
+    Message,
+    TaskOption,
+    TaskSelectionMessage
 )
 
 default_api_base_url = "https://agentverse.ai"
@@ -96,7 +92,7 @@ class Session:
         )
 
     async def start(self, objective: str, context: Optional[str] = None):
-        await self._submit_message({
+        await self._submit_message(payload={
             'type': 'start',
             'session_id': self.session_id,
             'bucket_id': self.function_group,
