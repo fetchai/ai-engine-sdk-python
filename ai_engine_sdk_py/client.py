@@ -164,7 +164,6 @@ class Session:
             if message['message_id'] in self._message_ids:
                 continue
 
-            # TODO: apply factory (or builder) and add typing
             logger.info(f"Message received: {message}")
             if is_api_agent_json_message(message):
                 agent_response: dict = message['agent_response']
@@ -261,8 +260,12 @@ class AiEngine:
         return privateGroups + publicGroups
 
     async def get_public_function_groups(self) -> List[FunctionGroup]:
-        raw_response: dict = await make_api_request(self._api_base_url, self._api_key, 'GET',
-                                                    "/v1beta1/function-groups/public/")
+        raw_response: dict = await make_api_request(
+            api_base_url=self._api_base_url,
+            api_key=self._api_key,
+            method='GET',
+            endpoint="/v1beta1/function-groups/public/"
+        )
         return list(
             map(
                 lambda item: FunctionGroup.parse_obj(item),
@@ -270,12 +273,19 @@ class AiEngine:
             )
         )
 
-    async def get_private_function_groups(self) -> dict:
-        return await make_api_request(
+    async def get_private_function_groups(self) -> List[FunctionGroup]:
+        raw_response: dict = await make_api_request(
             api_base_url=self._api_base_url,
             api_key=self._api_key,
             method='GET',
             endpoint="/v1beta1/function-groups/"
+        )
+        
+        return list(
+            map(
+                lambda item: FunctionGroup.parse_obj(item),
+                raw_response
+            )
         )
 
     async def get_credits(self) -> CreditBalance:
