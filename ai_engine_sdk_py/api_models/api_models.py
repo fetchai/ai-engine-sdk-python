@@ -103,10 +103,12 @@ class ApiUserMessageMessage(ApiMessagePayload):
 
 
 # ---- DATA CHECKERS ----
-def is_api_task_list(d: dict) -> bool:
-    return d["type"] == "task_list"
+def is_api_task_list(message_type: str) -> bool:
+    return message_type == "task_list"
 
 
-def is_api_context_json(d: dict) -> bool:
-    return d["type"] == "context_json"
+def is_api_context_json(message_type: str, agent_json_text: str) -> bool:
+    # TODO: signature for these checker has to homogenous.
+    # TODO: provide a gentle way to this checkers to the clients
+    return message_type == "context_json" or "Please confirm" in agent_json_text
 # ---------

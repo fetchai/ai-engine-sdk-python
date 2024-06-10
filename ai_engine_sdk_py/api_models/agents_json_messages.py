@@ -1,13 +1,18 @@
+import logging
 from enum import StrEnum
-from typing import List, Union, Dict, Any, Literal, get_args
+from typing import Union, Dict, Any, Literal, get_args, get_origin
 
 from pydantic import BaseModel
 
-from api_models.api_message import AiEngineMessage, AgentMessage, StopMessage, AgentJsonMessage
+from .api_message import AiEngineMessage, AgentMessage, StopMessage, AgentJsonMessage
+
+logger = logging.getLogger(__name__)
 
 
 class TaskOption(BaseModel):
-    key: int
+    # model_config = ConfigDict(coerce_numbers_to_str=True)
+    # TODO: should be more picky (int, uuid and union of literals).
+    key: str
     title: str
 
 
@@ -19,24 +24,34 @@ class TaskOption(BaseModel):
 
 
 class AgentJsonMessageTypes(StrEnum):
-    TASK_SELECTION = "TASK_SELECTION"
+    TASK_LIST = "TASK_LIST"
+    OPTIONS = "OPTIONS"
     CONFIRMATION = "CONFIRMATION"
     DATE = "DATE"
 
 
 DataRequestTypes = Union[
-    Literal[AgentJsonMessageTypes.DATE]
+    Literal[AgentJsonMessageTypes.DATE],
+]
+
+TaskSelectionTypes = Union[
+    Literal[AgentJsonMessageTypes.TASK_LIST],
+    Literal[AgentJsonMessageTypes.OPTIONS],
 ]
 
 
 class TaskSelectionMessage(AgentJsonMessage):
-    type: Literal[AgentJsonMessageTypes.TASK_SELECTION] = AgentJsonMessageTypes.TASK_SELECTION
+    type: TaskSelectionTypes
     text: str
-    options: List[TaskOption]
+    options: Dict[str, TaskOption]
+
+
+    def get_options_keys(self) -> list[TaskOption]:
+        return [option for option in self.options]
 
 
 class DataRequestMessage(AgentJsonMessage):
-    type: DataRequestTypes = AgentJsonMessageTypes.DATE
+    type: DataRequestTypes
     text: str
 
 
@@ -57,14 +72,24 @@ Message = Union[
 ]
 
 
-def is_confirmation_message(m: AgentJsonMessage) -> bool:
-    return m.type == AgentJsonMessageTypes.CONFIRMATION
+def is_agent_json_confirmation_message(message_type: str) -> bool:
+    # is_confirmation_type: bool = message_type == AgentJsonMessageTypes.CONFIRMATION
+    return message_type == AgentJsonMessageTypes.CONFIRMATION
 
 
-def is_task_selection_message(m: AgentJsonMessage) -> bool:
-    return m.type == AgentJsonMessageTypes.TASK_SELECTION
+def is_task_selection_message(message_type: str) -> bool:
+    union_of_type = TaskSelectionTypes
+    allowed_values = [literal for lit in get_args(union_of_type) for literal in get_args(lit)]
+    logger.debug(f"Allowed values: {allowed_values}")
+    logger.debug(f"Message type : {message_type}")
+    return message_type.upper() in allowed_values
 
 
-def is_data_request_message(m: AgentJsonMessage) -> bool:
-    allowed_values = [literal for lit in get_args(DataRequestTypes) for literal in get_args(lit)]
-    return m.type in allowed_values
+def is_data_request_message(message_type: str) -> bool:
+    union_of_type = DataRequestTypes
+    if get_origin(union_of_type) is Union:
+        allowed_values = [literal for lit in get_args(union_of_type) for literal in get_args(lit)]
+    elif get_origin(union_of_type) is Literal:
+        allowed_values = get_args(union_of_type)
+
+    return message_type.upper() in allowed_values
