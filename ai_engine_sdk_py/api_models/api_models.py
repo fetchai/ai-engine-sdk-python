@@ -3,9 +3,6 @@ from typing import List, Union, Dict, Any, Optional, Literal
 from pydantic import BaseModel
 
 
-# TODO: This is, apparently, response models..
-# TODO: Ideally, create entities (data class) and models (representation, serializers).
-#  Nontheless, innecessary right now
 class ApiNewSessionRequest(BaseModel):
     email: str
     functionGroup: Optional[str] = None
@@ -32,7 +29,7 @@ class ApiSelectedTasks(BaseModel):
 
 
 class ApiMessagePayload(BaseModel):
-    ...
+    session_id: str
 
 
 class ApiMessagePayloadTypes(StrEnum):
@@ -44,7 +41,6 @@ class ApiMessagePayloadTypes(StrEnum):
 class ApiStartMessage(ApiMessagePayload):
     type: Literal[ApiMessagePayloadTypes.START] = ApiMessagePayloadTypes.START
 
-    session_id: str
     objective: str
     message_id: str
     context: str
@@ -54,7 +50,6 @@ class ApiStartMessage(ApiMessagePayload):
 class ApiUserJsonMessage(ApiMessagePayload):
     type: Literal[ApiMessagePayloadTypes.USER_JSON] = ApiMessagePayloadTypes.USER_JSON
 
-    session_id: str
     message_id: str
     referral_id: str
     user_json: ApiSelectedTasks
@@ -63,17 +58,9 @@ class ApiUserJsonMessage(ApiMessagePayload):
 class ApiUserMessageMessage(ApiMessagePayload):
     type: Literal[ApiMessagePayloadTypes.USER_MESSAGE] = ApiMessagePayloadTypes.USER_MESSAGE
 
-    session_id: str
     message_id: str
     referral_id: str
     user_message: str
-
-
-# ApiMessagePayload = Union[
-#     ApiStartMessage,
-#     ApiUserJsonMessage,
-#     ApiUserMessageMessage
-# ]
 
 
 class ApiMessageTypes(StrEnum):
@@ -87,9 +74,6 @@ class ApiSubmitMessage(BaseModel):
 
 class ApiNewMessages(BaseModel):
     agent_response: List[str]
-
-
-
 
 
 # TODO : missing fields and

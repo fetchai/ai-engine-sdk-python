@@ -7,7 +7,7 @@ from uuid import uuid4
 import aiohttp
 
 from api_models.api_message import is_api_agent_json_message, is_api_agent_info_message, \
-    is_api_agent_message_message, is_api_stop_message, ApiMessage
+    is_api_agent_message_message, is_api_stop_message, ApiBaseMessage
 from api_models.api_models import (
     ApiNewSessionRequest,
     is_api_context_json,
@@ -21,8 +21,8 @@ from llm_models import (
     get_model_name,
     KnownModelId
 )
-from messages import *
-from messages import (
+from api_models.agents_messages import *
+from api_models.agents_messages import (
     AgentMessage,
     ConfirmationMessage,
     TaskOption,
@@ -80,7 +80,7 @@ class Session:
         self._api_key = api_key
         self.session_id = session_id
         self.function_group = function_group
-        self._messages: List[ApiMessage] = []
+        self._messages: List[ApiBaseMessage] = []
         self._message_ids: set[str] = set()
 
     async def _submit_message(self, payload: ApiMessagePayload):
@@ -280,7 +280,7 @@ class AiEngine:
             method='GET',
             endpoint="/v1beta1/function-groups/"
         )
-        
+
         return list(
             map(
                 lambda item: FunctionGroup.parse_obj(item),
