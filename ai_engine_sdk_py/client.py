@@ -21,9 +21,8 @@ from llm_models import (
     get_model_name,
     KnownModelId
 )
-from api_models.agents_messages import *
-from api_models.agents_messages import (
-    AgentMessage,
+from api_models.agents_json_messages import *
+from api_models.agents_json_messages import (
     ConfirmationMessage,
     TaskOption,
     TaskSelectionMessage
@@ -148,7 +147,7 @@ class Session:
             })
         )
 
-    async def get_messages(self) -> List[BaseMessage]:
+    async def get_messages(self) -> List[ApiBaseMessage]:
         # TODO: set endpoints in a common place
         queryParams = f"?last_message_id={self._messages[-1]['message_id']}" if self._messages else ""
         response = await make_api_request(
@@ -158,7 +157,7 @@ class Session:
             endpoint=f"/v1beta1/engine/chat/sessions/{self.session_id}/new-messages{queryParams}"
         )
 
-        newMessages: List[BaseMessage] = []
+        newMessages: List[ApiBaseMessage] = []
         for item in response['agent_response']:
             message: dict = json.loads(item)
             if message['message_id'] in self._message_ids:

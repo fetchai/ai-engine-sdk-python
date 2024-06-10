@@ -4,13 +4,9 @@ import os
 import sys
 
 from client import AiEngine, FunctionGroup
-from api_models.agents_messages import (
-    is_task_selection_message,
-    is_agent_message,
-    is_ai_engine_message,
-    is_confirmation_message,
+from api_models.api_message import is_ai_engine_message, is_agent_message, \
     is_stop_message
-)
+from api_models.agents_json_messages import is_confirmation_message, is_task_selection_message
 
 logger = logging.getLogger(__name__)
 
