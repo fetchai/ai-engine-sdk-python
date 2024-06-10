@@ -1,5 +1,7 @@
 import os
 import asyncio
+import sys
+
 # from aioconsole import ainput
 
 from client import AiEngine, FunctionGroup
@@ -16,7 +18,6 @@ logger = logging.getLogger(__name__)
 
 
 api_key = os.getenv("AV_API_KEY", "")
-api_key = "eyJhbGciOiJSUzI1NiJ9.eyJleHAiOjE3MjAzNjEwNDQsImdycCI6ImludGVybmFsIiwiaWF0IjoxNzE3NzY5MDQ0LCJpc3MiOiJmZXRjaC5haSIsImp0aSI6IjNhZjMyZDE3YzM2ZjBlYTc1NjhiZDQxOSIsInNjb3BlIjoiYXYiLCJzdWIiOiJlODlkYTkzMTFkNWNiY2EyMjg1NjllMjMwNmRjMGIyNDllOTQ4NjMwM2EwYzVmNTAifQ.Br2UAKSvyQxdOJaXQagjEmFeMqxm6RsNFE_iqmmTDJ9Q89hkaLlujFUgSMU4lYgC8DEgaJktczT_dYOJUb4S6V2FnMASR1kgrXLPDvZgDulduOwbOJoMVc9AT88dzcj_MJD_IF9FnKYwPLLum7-CZSODoGjZyNeYU7A_pU_xLhGiAh2sgvWNgj6B04QnpUi5sNWuYFTiqsrZK5cmz4-fQ5FTdH3jCabNpQL8JAwiSVuV2Fsk8swHE5nsb7sYzRiGGJgtD9feTe8SufFLgeVcRD6l5N-m0K6UCTrqvfHYaeiG10IBEXqFoXynH2LaR9LsmKCvfWIr8GjbT7BEtpU0Gw"
 
 
 async def snooze(ms: int):
@@ -24,6 +25,7 @@ async def snooze(ms: int):
 
 
 async def main():
+    logger.debug("🚀 Starting example execution")
     ai_engine = AiEngine(api_key)
 
     function_groups: list[FunctionGroup]= await ai_engine.get_function_groups()
@@ -35,7 +37,7 @@ async def main():
     # TODO: proper function group, not hardcoded
     # Assuming '523a7194-214f-48fd-b5be-b0e953cc35a3' is meant to be used:
     session = await ai_engine.create_session(function_group="523a7194-214f-48fd-b5be-b0e953cc35a3")
-    # TODO: no magic strings
+
     objective = input("What is your objective: ")
     await session.start(objective)
 
@@ -106,4 +108,9 @@ async def main():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(
+        stream=sys.stdout,
+        level=logging.DEBUG,
+        format='%(asctime)s.%(msecs)03d %(levelname)s %(module)s: %(message)s',
+    )
     asyncio.run(main())

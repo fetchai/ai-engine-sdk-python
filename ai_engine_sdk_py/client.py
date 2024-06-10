@@ -1,5 +1,7 @@
 import asyncio
 import json
+import logging
+import sys
 from typing import Optional, List, Union
 from uuid import uuid4
 
@@ -29,6 +31,8 @@ from messages import (
     TaskOption,
     TaskSelectionMessage
 )
+
+logger = logging.getLogger(__name__)
 
 default_api_base_url = "https://agentverse.ai"
 
@@ -147,7 +151,7 @@ class Session:
             })
         )
 
-    async def get_messages(self) -> List[Message]:
+    async def get_messages(self) -> List[BaseMessage]:
         # TODO: set endpoints in a common place
         queryParams = f"?last_message_id={self._messages[-1]['message_id']}" if self._messages else ""
         response = await make_api_request(
@@ -157,15 +161,18 @@ class Session:
             endpoint=f"/v1beta1/engine/chat/sessions/{self.session_id}/new-messages{queryParams}"
         )
 
-        newMessages: List[Message] = []
+        newMessages: List[BaseMessage] = []
         for item in response['agent_response']:
             message: dict = json.loads(item)
             if message['message_id'] in self._message_ids:
                 continue
 
             # TODO: apply factory (or builder) and add typing
+            logger.info(f"Message received: {message}")
             if is_api_agent_json_message(message):
-                if is_api_task_list(message['agent_json']):
+                agent_response: dict = message['agent_response']
+
+                if is_api_task_list(agent_response):
                     newMessages.append(
                         TaskSelectionMessage.parse_obj({
                             'id': message['message_id'],
@@ -176,7 +183,7 @@ class Session:
                                         message['agent_json']['options']],
                         })
                     )
-                elif is_api_context_json(message['agent_json']):
+                elif is_api_context_json(agent_response):
                     newMessages.append(
                         ConfirmationMessage.parse_obj({
                             'id': message['message_id'],
@@ -187,8 +194,17 @@ class Session:
                             'payload': message['agent_json']['context_json']['args'],
                         })
                     )
-                else:
+                elif agent_response['type'] == "date":
                     # TODO: implement date type: pending-unknown-json-to implement/date-type.json
+                    newMessages.append(
+                        DataRequestMessage.parse_obj({
+                            "id": message['message_id'],
+                            "type": "date",
+                            "text": agent_response['text'],
+                            "options": agent_response['options'],
+                        })
+                    )
+                else:
                     print(f"UNKNOWN-JSON: {message}")
             elif is_api_agent_info_message(message):
                 newMessages.append(

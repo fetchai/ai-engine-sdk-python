@@ -39,8 +39,17 @@ class ApiAgentMessageMessage(ApiMessage):
     agent_message: str
 
 
+class ApiAgentMessageMessage(ApiMessage):
+    type: str = "agent_message"
+
+    message_id: str
+    score: int
+    referral_id: Optional[str] = None
+    agent_message: str
+
+
 class ApiStopMessage(ApiMessage):
-    type: str = "stop"
+    type: str = ApiMessageType.AGENT_STOP
 
     message_id: str
     score: int

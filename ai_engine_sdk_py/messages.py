@@ -23,6 +23,10 @@ class TaskSelectionMessage(BaseMessage):
     options: List[TaskOption]
 
 
+class DataRequestMessage(BaseMessage):
+    text: str
+
+
 class AiEngineMessage(BaseMessage):
     type: str = "ai-engine"
     text: str
