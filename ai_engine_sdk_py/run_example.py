@@ -1,8 +1,7 @@
-import os
 import asyncio
+import logging
+import os
 import sys
-
-# from aioconsole import ainput
 
 from client import AiEngine, FunctionGroup
 from messages import (
@@ -12,13 +11,10 @@ from messages import (
     is_confirmation_message,
     is_stop_message
 )
-import logging
 
 logger = logging.getLogger(__name__)
 
-
 api_key = os.getenv("AV_API_KEY", "")
-
 
 async def snooze(ms: int):
     await asyncio.sleep(ms / 1000)
@@ -28,7 +24,7 @@ async def main():
     logger.debug("🚀 Starting example execution")
     ai_engine = AiEngine(api_key)
 
-    function_groups: list[FunctionGroup]= await ai_engine.get_function_groups()
+    function_groups: list[FunctionGroup] = await ai_engine.get_function_groups()
 
     public_group = next((g for g in function_groups if g.name == "Fetch Verified"), None)
     if public_group is None:

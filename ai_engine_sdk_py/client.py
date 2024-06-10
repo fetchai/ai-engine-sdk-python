@@ -1,8 +1,7 @@
 import asyncio
 import json
 import logging
-import sys
-from typing import Optional, List, Union
+from typing import Optional
 from uuid import uuid4
 
 import aiohttp
@@ -11,7 +10,6 @@ from api_models.api_message import is_api_agent_json_message, is_api_agent_info_
     is_api_agent_message_message, is_api_stop_message, ApiMessage
 from api_models.api_models import (
     ApiNewSessionRequest,
-    ApiSubmitMessage,
     is_api_context_json,
     is_api_task_list, ApiStartMessage, ApiMessagePayload, ApiUserJsonMessage, ApiUserMessageMessage
 )
@@ -27,7 +25,6 @@ from messages import *
 from messages import (
     AgentMessage,
     ConfirmationMessage,
-    Message,
     TaskOption,
     TaskSelectionMessage
 )
