@@ -165,38 +165,36 @@ class Session:
 
             logger.info(f"Message received: {message}")
             if is_api_agent_json_message(message):
-                agent_response: dict = message['agent_response']
+                agent_json: dict = message['agent_json']
 
-                if is_api_task_list(agent_response):
+                if is_api_task_list(agent_json):
                     newMessages.append(
                         TaskSelectionMessage.parse_obj({
                             'id': message['message_id'],
-                            'type': "task_selection",
                             'timestamp': message['timestamp'],
-                            'text': message['agent_json']['text'],
+                            'text': agent_json['text'],
                             'options': [{'key': o['key'], 'title': o['value']} for o in
                                         message['agent_json']['options']],
                         })
                     )
-                elif is_api_context_json(agent_response):
+                elif is_api_context_json(agent_json):
                     newMessages.append(
                         ConfirmationMessage.parse_obj({
                             'id': message['message_id'],
-                            'type': "confirmation",
                             'timestamp': message['timestamp'],
-                            'text': message['agent_json']['text'],
-                            'model': message['agent_json']['context_json']['digest'],
-                            'payload': message['agent_json']['context_json']['args'],
+                            'text': agent_json['text'],
+                            'model': agent_json['context_json']['digest'],
+                            'payload': agent_json['context_json']['args'],
                         })
                     )
-                elif agent_response['type'] == "date":
+                elif agent_json['type'] == "date":
                     # TODO: implement date type: pending-unknown-json-to implement/date-type.json
                     newMessages.append(
                         DataRequestMessage.parse_obj({
                             "id": message['message_id'],
-                            "type": "date",
-                            "text": agent_response['text'],
-                            "options": agent_response['options'],
+                            # "type": "date",
+                            "text": agent_json['text'],
+                            "options": agent_json['options'],
                         })
                     )
                 else:
