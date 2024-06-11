@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "ai-engine-sdk-py"
+name = "ai-engine-sdk"
 version = "0.1.0"
 description = ""
 authors = ["Xavier <xavier.peiro@fetch.ai>"]
