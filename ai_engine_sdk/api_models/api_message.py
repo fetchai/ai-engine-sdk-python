@@ -60,10 +60,6 @@ def is_ai_engine_message(m: ApiBaseMessage) -> bool:
     return m.type == "ai-engine"
 
 
-def is_agent_message(m: ApiBaseMessage) -> bool:
-    return m.type == "agent"
-
-
 def is_stop_message(m: ApiBaseMessage) -> bool:
     return m.type == ApiMessageType.AGENT_STOP
 

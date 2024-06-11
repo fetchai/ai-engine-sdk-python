@@ -1,22 +1,26 @@
 import asyncio
 import json
-from typing import Optional, List
+import logging
+from typing import Optional, List, Union
 from uuid import uuid4
 
 import aiohttp
+from pydantic import BaseModel
 
-from .api_models.agents_json_messages import *
 from .api_models.agents_json_messages import (
     ConfirmationMessage,
     TaskOption,
-    TaskSelectionMessage
+    TaskSelectionMessage,
+    is_task_selection_message,
+    is_data_request_message,
+    DataRequestMessage
 )
 from .api_models.api_message import (
     is_api_agent_json_message,
     is_api_agent_info_message,
     is_api_agent_message_message,
     is_api_stop_message,
-    ApiBaseMessage
+    ApiBaseMessage, AgentMessage, AiEngineMessage, StopMessage
 )
 from .api_models.api_models import (
     ApiNewSessionRequest,

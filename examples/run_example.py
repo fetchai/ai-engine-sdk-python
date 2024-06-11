@@ -2,15 +2,20 @@ import asyncio
 import logging
 import os
 import sys
+import platform
+print(platform.python_version())
+from ai_engine_sdk import (
+    AiEngine,
+    is_agent_message,
+    is_ai_engine_message,
+    is_confirmation_message,
+    is_stop_message,
+    is_task_selection_message, TaskSelectionMessage
+)
 
-from ai_engine_sdk.client import AiEngine, FunctionGroup
-from ai_engine_sdk.api_models.api_message import is_ai_engine_message, is_agent_message, \
-    is_stop_message, ApiBaseMessage
-from ai_engine_sdk.api_models.agents_json_messages import is_agent_json_confirmation_message, is_task_selection_message, \
-    TaskSelectionMessage, is_data_request_message
+from ai_engine_sdk import ApiBaseMessage, FunctionGroup
 
 logger = logging.getLogger(__name__)
-
 api_key = os.getenv("AV_API_KEY", "")
 
 
@@ -70,7 +75,7 @@ async def main():
                         await session.submit_response(message, response)
                 elif is_ai_engine_message(message):
                     print("Engine:", message.text)
-                elif is_agent_json_confirmation_message(message_type=message.type):
+                elif is_confirmation_message(message_type=message.type):
                     # TODO: RENAME/REFACTOR: This checker is functionally okay but confusing interface for clients.
                     print("Confirm:", message.payload)
 
@@ -84,14 +89,14 @@ async def main():
                     print("\nSession has ended")
                     session_ended = True
                     break
-                elif is_data_request_message(message_type=message.type):
-                    # This is just for entering data.
-                    # TODO: How could we detect, for parsing, any entry data apart than the type?
-                    #  Of course, we can rely on the user's ability for the nonce.
-                    print("Insert data: ", message.text)
-                    response = input("User (enter to skip): ")
-                    if response != "":
-                        await session.submit_response(message, response)
+                # elif is_data_request_message(message_type=message.type):
+                #     # This is just for entering data.
+                #     # TODO: How could we detect, for parsing, any entry data apart than the type?
+                #     #  Of course, we can rely on the user's ability for the nonce.
+                #     print("Insert data: ", message.text)
+                #     response = input("User (enter to skip): ")
+                #     if response != "":
+                #         await session.submit_response(message, response)
 
             # if the session has concluded then break
             if session_ended:

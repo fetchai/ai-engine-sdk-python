@@ -4,6 +4,7 @@ from typing import Union, Dict, Any, Literal, get_args, get_origin
 
 from pydantic import BaseModel
 
+from .api_message import ApiBaseMessage
 from .api_message import AiEngineMessage, AgentMessage, StopMessage, AgentJsonMessage
 
 logger = logging.getLogger(__name__)
@@ -93,3 +94,8 @@ def is_data_request_message(message_type: str) -> bool:
         allowed_values = get_args(union_of_type)
 
     return message_type.upper() in allowed_values
+
+
+def is_agent_message(m: ApiBaseMessage) -> bool:
+    is_agent_message: bool = m.type == "agent"
+    return is_agent_message or is_data_request_message(message_type=m.type)
