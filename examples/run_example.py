@@ -2,8 +2,7 @@ import asyncio
 import logging
 import os
 import sys
-import platform
-print(platform.python_version())
+
 from ai_engine_sdk import (
     AiEngine,
     is_agent_message,
@@ -12,7 +11,6 @@ from ai_engine_sdk import (
     is_stop_message,
     is_task_selection_message, TaskSelectionMessage
 )
-
 from ai_engine_sdk import ApiBaseMessage, FunctionGroup
 
 logger = logging.getLogger(__name__)
