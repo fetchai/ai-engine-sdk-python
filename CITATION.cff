@@ -1,0 +1,8 @@
+cff-version: 1.2.0
+message: "If you use this SDK in your research or project, please cite it as follows:"
+title: Fetch.ai AI Engine SDK in Python
+authors:
+  - family-names: Fetch.ai
+date-released: "2024-06-06"
+url: "https://github.com/fetchai/ai-engine-sdk-python"
+license: "Apache-2.0"
