@@ -157,7 +157,6 @@ class Session:
         )
 
     async def get_messages(self) -> List[ApiBaseMessage]:
-        # TODO: set endpoints in a common place
         queryParams = f"?last_message_id={self._messages[-1]['message_id']}" if self._messages else ""
         response = await make_api_request(
             api_base_url=self._api_base_url,
@@ -198,7 +197,6 @@ class Session:
                         })
                     )
                 elif is_data_request_message(message_type=agent_json_type):
-                    # TODO: implement date type: pending-unknown-json-to implement/date-type.json
                     newMessages.append(
                         DataRequestMessage.parse_obj({
                             "id": message['message_id'],

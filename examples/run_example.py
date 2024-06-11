@@ -72,7 +72,6 @@ async def main():
                 elif is_ai_engine_message(message):
                     print("Engine:", message.text)
                 elif is_confirmation_message(message_type=message.type):
-                    # TODO: RENAME/REFACTOR: This checker is functionally okay but confusing interface for clients.
                     print("Confirm:", message.payload)
 
                     response = input("\nPress enter to confirm, otherwise explain issue:\n")
@@ -95,7 +94,6 @@ async def main():
     except Exception as e:
         logger.debug(f"Unhandled exception: {e}")
         print("Error", e)
-        # TODO: should this be raised?
         raise e
     finally:
         # clean up the session

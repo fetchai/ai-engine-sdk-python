@@ -11,17 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 class TaskOption(BaseModel):
-    # model_config = ConfigDict(coerce_numbers_to_str=True)
-    # TODO: should be more picky (int, uuid and union of literals).
     key: str
     title: str
-
-
-# TODO: This is wrong, they should not inherit from AgentJsonMessage, they should be
-#  included in the AgentJsonMessage schema; so we do not know how complex it can become and
-#  the current approach is stiff and does not ease change or add.
-#  In addition we should differentiate between incoming data parsers (deserializers),
-#  outgoing (serializers) and internal entities.
 
 
 class AgentJsonMessageTypes(StrEnum):
@@ -63,7 +54,6 @@ class ConfirmationMessage(AgentJsonMessage):
     payload: Dict[str, Any]
 
 
-# TODO: change this for
 Message = Union[
     TaskSelectionMessage,
     AiEngineMessage,
