@@ -3,10 +3,10 @@ import logging
 import os
 import sys
 
-from ai_engine_sdk_py.client import AiEngine, FunctionGroup
-from ai_engine_sdk_py.api_models.api_message import is_ai_engine_message, is_agent_message, \
+from ai_engine_sdk.client import AiEngine, FunctionGroup
+from ai_engine_sdk.api_models.api_message import is_ai_engine_message, is_agent_message, \
     is_stop_message, ApiBaseMessage
-from ai_engine_sdk_py.api_models.agents_json_messages import is_agent_json_confirmation_message, is_task_selection_message, \
+from ai_engine_sdk.api_models.agents_json_messages import is_agent_json_confirmation_message, is_task_selection_message, \
     TaskSelectionMessage, is_data_request_message
 
 logger = logging.getLogger(__name__)
