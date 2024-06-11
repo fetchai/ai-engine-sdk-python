@@ -4,7 +4,6 @@ version = "0.1.0"
 description = ""
 authors = ["Xavier <xavier.peiro@fetch.ai>"]
 readme = "README.md"
-packages = [{include="*", from="ai_engine_sdk"}]
 
 [tool.poetry.dependencies]
 python = "~3.11"
