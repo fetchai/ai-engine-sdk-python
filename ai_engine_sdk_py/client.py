@@ -1,32 +1,36 @@
 import asyncio
 import json
-import logging
-from typing import Optional
+from typing import Optional, List
 from uuid import uuid4
 
 import aiohttp
 
-from api_models.api_message import is_api_agent_json_message, is_api_agent_info_message, \
-    is_api_agent_message_message, is_api_stop_message, ApiMessage
-from api_models.api_models import (
+from .api_models.agents_json_messages import *
+from .api_models.agents_json_messages import (
+    ConfirmationMessage,
+    TaskOption,
+    TaskSelectionMessage
+)
+from .api_models.api_message import (
+    is_api_agent_json_message,
+    is_api_agent_info_message,
+    is_api_agent_message_message,
+    is_api_stop_message,
+    ApiBaseMessage
+)
+from .api_models.api_models import (
     ApiNewSessionRequest,
     is_api_context_json,
-    is_api_task_list, ApiStartMessage, ApiMessagePayload, ApiUserJsonMessage, ApiUserMessageMessage
+    ApiStartMessage, ApiMessagePayload, ApiUserJsonMessage, ApiUserMessageMessage
 )
-from llm_models import (
+from .api_models.parsing_utils import get_indexed_task_options_from_raw_api_response
+from .llm_models import (
     CustomModel,
     DefaultModelId,
     DefaultModelIds,
     get_model_id,
     get_model_name,
     KnownModelId
-)
-from messages import *
-from messages import (
-    AgentMessage,
-    ConfirmationMessage,
-    TaskOption,
-    TaskSelectionMessage
 )
 
 logger = logging.getLogger(__name__)
@@ -80,7 +84,7 @@ class Session:
         self._api_key = api_key
         self.session_id = session_id
         self.function_group = function_group
-        self._messages: List[ApiMessage] = []
+        self._messages: List[ApiBaseMessage] = []
         self._message_ids: set[str] = set()
 
     async def _submit_message(self, payload: ApiMessagePayload):
@@ -103,7 +107,7 @@ class Session:
             })
         )
 
-    async def submit_task_selection(self, selection: TaskSelectionMessage, options: List[TaskOption]):
+    async def submit_task_selection(self, selection: TaskSelectionMessage, options: list[TaskOption]):
         await self._submit_message(
             payload=ApiUserJsonMessage.parse_obj({
                 'session_id': self.session_id,
@@ -148,7 +152,7 @@ class Session:
             })
         )
 
-    async def get_messages(self) -> List[BaseMessage]:
+    async def get_messages(self) -> List[ApiBaseMessage]:
         # TODO: set endpoints in a common place
         queryParams = f"?last_message_id={self._messages[-1]['message_id']}" if self._messages else ""
         response = await make_api_request(
@@ -158,7 +162,7 @@ class Session:
             endpoint=f"/v1beta1/engine/chat/sessions/{self.session_id}/new-messages{queryParams}"
         )
 
-        newMessages: List[BaseMessage] = []
+        newMessages: List[ApiBaseMessage] = []
         for item in response['agent_response']:
             message: dict = json.loads(item)
             if message['message_id'] in self._message_ids:
@@ -166,38 +170,38 @@ class Session:
 
             logger.info(f"Message received: {message}")
             if is_api_agent_json_message(message):
-                agent_response: dict = message['agent_response']
-
-                if is_api_task_list(agent_response):
+                agent_json: dict = message['agent_json']
+                agent_json_type: str = agent_json['type'].upper()
+                if is_task_selection_message(message_type=agent_json_type):
+                    indexed_task_options: dict = get_indexed_task_options_from_raw_api_response(raw_api_response=message)
                     newMessages.append(
                         TaskSelectionMessage.parse_obj({
+                            'type': agent_json_type,
                             'id': message['message_id'],
-                            'type': "task_selection",
                             'timestamp': message['timestamp'],
-                            'text': message['agent_json']['text'],
-                            'options': [{'key': o['key'], 'title': o['value']} for o in
-                                        message['agent_json']['options']],
+                            'text': agent_json['text'],
+                            'options':indexed_task_options
                         })
                     )
-                elif is_api_context_json(agent_response):
+                elif is_api_context_json(message_type=agent_json_type, agent_json_text=agent_json['text']):
                     newMessages.append(
                         ConfirmationMessage.parse_obj({
                             'id': message['message_id'],
-                            'type': "confirmation",
                             'timestamp': message['timestamp'],
-                            'text': message['agent_json']['text'],
-                            'model': message['agent_json']['context_json']['digest'],
-                            'payload': message['agent_json']['context_json']['args'],
+                            'text': agent_json['text'],
+                            'model': agent_json['context_json']['digest'],
+                            'payload': agent_json['context_json']['args'],
                         })
                     )
-                elif agent_response['type'] == "date":
+                elif is_data_request_message(message_type=agent_json_type):
                     # TODO: implement date type: pending-unknown-json-to implement/date-type.json
                     newMessages.append(
                         DataRequestMessage.parse_obj({
                             "id": message['message_id'],
-                            "type": "date",
-                            "text": agent_response['text'],
-                            "options": agent_response['options'],
+                            "text": agent_json['text'],
+                            "type": agent_json_type,
+                            "options": agent_json['options'],
+                            "timestamp": message['timestamp']
                         })
                     )
                 else:
@@ -280,7 +284,7 @@ class AiEngine:
             method='GET',
             endpoint="/v1beta1/function-groups/"
         )
-        
+
         return list(
             map(
                 lambda item: FunctionGroup.parse_obj(item),

@@ -1,10 +1,7 @@
-from enum import Enum, StrEnum
-from typing import Optional, Union, Literal, Type
+from enum import StrEnum
+from typing import Optional
 
-from pydantic import BaseModel, Field
-from pydantic_core.core_schema import JsonType
-
-from api_models.api_models import ApiAgentJson, ApiContextJson
+from pydantic import BaseModel
 
 
 class ApiMessageType(StrEnum):
@@ -14,88 +11,89 @@ class ApiMessageType(StrEnum):
     AGENT_INFO = "agent_info"
 
 
-class ApiMessage(BaseModel):
+class ApiBaseMessage(BaseModel):
     session_id: Optional[str] = None
     id: str  # uuid
     type: str  # enum
     timestamp: str  # date
 
 
-class ApiAgentInfoMessage(ApiMessage):
-    type: Literal["agent_info"] = Field(init=False, default="agent_info")
-
-    message_id: str
-    score: int
-    referral_id: Optional[str] = None
-    agent_info: str
+class AgentJsonMessage(ApiBaseMessage):
+    ...
 
 
-class ApiAgentMessageMessage(ApiMessage):
-    type: str = "agent_message"
-
-    message_id: str
-    score: int
-    referral_id: Optional[str] = None
-    agent_message: str
+class AiEngineMessage(ApiBaseMessage):
+    type: str = "ai-engine"
+    text: str
 
 
-class ApiAgentMessageMessage(ApiMessage):
-    type: str = "agent_message"
-
-    message_id: str
-    score: int
-    referral_id: Optional[str] = None
-    agent_message: str
+class AgentMessage(ApiBaseMessage):
+    # TODO: I've not seen that type. What it is meant for?
+    type: str = "agent"
+    text: str
 
 
-class ApiStopMessage(ApiMessage):
-    type: str = ApiMessageType.AGENT_STOP
-
-    message_id: str
-    score: int
-    referral_id: str
+class StopMessage(ApiBaseMessage):
+    type: str = "stop"
 
 
-class ApiAgentJsonMessage(ApiMessage):
-    type: Literal[ApiMessageType.AGENT_JSON] = ApiMessageType.AGENT_JSON
-
-    message_id: str
-    score: int
-    referral_id: Optional[str] = None
-    agent_json: Union[ApiAgentJson, ApiContextJson]
-
-
-# ApiMessageTypes = Union[
-#     ApiAgentJsonMessage,
-#     ApiStopMessage,
-#     ApiAgentInfoMessage,
-#     ApiAgentMessageMessage
-# ]
-#
-
-_type_map: dict[str, type[ApiMessage]] = {
-    ApiMessageType.AGENT_JSON: ApiAgentJsonMessage,
-    ApiMessageType.AGENT_MESSAGE: ApiAgentMessageMessage,
-    ApiMessageType.AGENT_INFO: ApiAgentInfoMessage,
-    ApiMessageType.AGENT_STOP: ApiStopMessage,
-}
-
-
-def api_message_factory(data: dict, message_type: str) -> ApiMessage:
-    return _type_map[message_type].parse_obj(data)
-
-
+# ---- RAW DATA CHECKERS ----
+# TODO: move/reafctor checkers to proper context. Is not the same identify a api_message (top level)
+#  than agent_json ones (even if the diff is only the path of the elements)
 def is_api_agent_json_message(m: dict) -> bool:
-    return m["type"] == "agent_json"
+    return m["type"] == ApiMessageType.AGENT_JSON
 
 
 def is_api_agent_info_message(m: dict) -> bool:
-    return m["type"] == "agent_info"
+    return m["type"] == ApiMessageType.AGENT_INFO
 
 
 def is_api_agent_message_message(m: dict) -> bool:
-    return m["type"] == "agent_message"
+    return m["type"] == ApiMessageType.AGENT_MESSAGE
 
 
 def is_api_stop_message(m: dict) -> bool:
-    return m["type"] == "stop"
+    return m["type"] == ApiMessageType.AGENT_STOP
+
+
+def is_ai_engine_message(m: ApiBaseMessage) -> bool:
+    return m.type == "ai-engine"
+
+
+def is_agent_message(m: ApiBaseMessage) -> bool:
+    return m.type == "agent"
+
+
+def is_stop_message(m: ApiBaseMessage) -> bool:
+    return m.type == ApiMessageType.AGENT_STOP
+
+
+def is_api_confirmation_message(m: ApiBaseMessage) -> bool:
+    # TODO: this should use agent_json_messages checkers but cannot be imported (circular imports),
+    #  so it requires a dedicated file.
+    """
+    {
+    'session_id': 'bfcdb62b-4e73-42be-9117-f90030d0a1a1',
+     'message_id': 'f5ee18aa-7744-4965-8a10-e6c59a0deaf6',
+     'timestamp': '2024-06-10T17:47:17.301769',
+     'score': 0.0,
+     'referral_id': None,
+     'type': 'agent_json',
+     'agent_json': {
+        'type': 'context_json',
+        'text': 'Please confirm the following details',
+        'options': None,
+        'context_json': {
+            'digest': 'model:461bc84518c881327cb3a99d37d660d3a9bf4a302898447e57002fcea4e72535',
+            'args': {
+                'from': 'BCN', 'to': 'WAW', 'trip': 'oneway', 'date': '11.08.2024', 'persons': 1
+            }
+        },
+        'functions': None
+        }
+    }
+    """
+    if m.type == ApiMessageType.AGENT_INFO:
+        m: AgentJsonMessage = m
+        ...
+
