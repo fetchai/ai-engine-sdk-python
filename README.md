@@ -4,10 +4,6 @@
 
 - Simple and intuitive API
 
-- Support for TypeScript and JavaScript
-
-- Can run in the browser or via node
-
   
 
 ## 📦 Getting Started
