@@ -4,23 +4,15 @@ from typing import Union, Dict, Any, Literal, get_args, get_origin
 
 from pydantic import BaseModel
 
+from .api_message import ApiBaseMessage
 from .api_message import AiEngineMessage, AgentMessage, StopMessage, AgentJsonMessage
 
 logger = logging.getLogger(__name__)
 
 
 class TaskOption(BaseModel):
-    # model_config = ConfigDict(coerce_numbers_to_str=True)
-    # TODO: should be more picky (int, uuid and union of literals).
     key: str
     title: str
-
-
-# TODO: This is wrong, they should not inherit from AgentJsonMessage, they should be
-#  included in the AgentJsonMessage schema; so we do not know how complex it can become and
-#  the current approach is stiff and does not ease change or add.
-#  In addition we should differentiate between incoming data parsers (deserializers),
-#  outgoing (serializers) and internal entities.
 
 
 class AgentJsonMessageTypes(StrEnum):
@@ -62,7 +54,6 @@ class ConfirmationMessage(AgentJsonMessage):
     payload: Dict[str, Any]
 
 
-# TODO: change this for
 Message = Union[
     TaskSelectionMessage,
     AiEngineMessage,
@@ -93,3 +84,8 @@ def is_data_request_message(message_type: str) -> bool:
         allowed_values = get_args(union_of_type)
 
     return message_type.upper() in allowed_values
+
+
+def is_agent_message(m: ApiBaseMessage) -> bool:
+    is_agent_message: bool = m.type == "agent"
+    return is_agent_message or is_data_request_message(message_type=m.type)

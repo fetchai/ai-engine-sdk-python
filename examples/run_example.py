@@ -3,14 +3,17 @@ import logging
 import os
 import sys
 
-from ai_engine_sdk.client import AiEngine, FunctionGroup
-from ai_engine_sdk.api_models.api_message import is_ai_engine_message, is_agent_message, \
-    is_stop_message, ApiBaseMessage
-from ai_engine_sdk.api_models.agents_json_messages import is_agent_json_confirmation_message, is_task_selection_message, \
-    TaskSelectionMessage, is_data_request_message
+from ai_engine_sdk import (
+    AiEngine,
+    is_agent_message,
+    is_ai_engine_message,
+    is_confirmation_message,
+    is_stop_message,
+    is_task_selection_message, TaskSelectionMessage
+)
+from ai_engine_sdk import ApiBaseMessage, FunctionGroup
 
 logger = logging.getLogger(__name__)
-
 api_key = os.getenv("AV_API_KEY", "")
 
 
@@ -24,9 +27,6 @@ async def main():
     if public_group is None:
         raise Exception('Could not find "Public" function group.')
 
-    # TODO: proper function group, not hardcoded
-    # Assuming '523a7194-214f-48fd-b5be-b0e953cc35a3' is meant to be used:
-    # session = await ai_engine.create_session(function_group="523a7194-214f-48fd-b5be-b0e953cc35a3")
     session = await ai_engine.create_session(function_group=public_group.uuid)
     default_objective: str = "Find a flight to warsaw."
     objective = input(f"What is your objective [default: {default_objective}]: ") or "Find a flight to warsaw."
@@ -35,6 +35,7 @@ async def main():
     try:
         empty_count = 0
         session_ended = False
+
         while empty_count < 12:
             messages: list[ApiBaseMessage] = await session.get_messages()
             if len(messages) == 0:
@@ -70,8 +71,7 @@ async def main():
                         await session.submit_response(message, response)
                 elif is_ai_engine_message(message):
                     print("Engine:", message.text)
-                elif is_agent_json_confirmation_message(message_type=message.type):
-                    # TODO: RENAME/REFACTOR: This checker is functionally okay but confusing interface for clients.
+                elif is_confirmation_message(message_type=message.type):
                     print("Confirm:", message.payload)
 
                     response = input("\nPress enter to confirm, otherwise explain issue:\n")
@@ -84,14 +84,6 @@ async def main():
                     print("\nSession has ended")
                     session_ended = True
                     break
-                elif is_data_request_message(message_type=message.type):
-                    # This is just for entering data.
-                    # TODO: How could we detect, for parsing, any entry data apart than the type?
-                    #  Of course, we can rely on the user's ability for the nonce.
-                    print("Insert data: ", message.text)
-                    response = input("User (enter to skip): ")
-                    if response != "":
-                        await session.submit_response(message, response)
 
             # if the session has concluded then break
             if session_ended:
@@ -102,7 +94,6 @@ async def main():
     except Exception as e:
         logger.debug(f"Unhandled exception: {e}")
         print("Error", e)
-        # TODO: should this be raised?
         raise e
     finally:
         # clean up the session
