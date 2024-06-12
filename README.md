@@ -12,7 +12,7 @@
 
 ```bash
 
-poetry install ai-engine-sdk
+poetry add ai-engine-sdk
 # or 
 pip install ai-engine-sdk
 
