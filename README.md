@@ -139,7 +139,7 @@ await session.delete()
 
   
 
-If you would like to check out a complete example on how to integrate AI Engine into your app, feel free to checkout [examples/run_example.py](examples/run_example.py).
+If you would like to check out a complete example on how to integrate AI Engine into your app, feel free to checkout [examples/run_example.py](https://github.com/fetchai/ai-engine-sdk-python/blob/master/examples/run_example.py).
 
   
 
