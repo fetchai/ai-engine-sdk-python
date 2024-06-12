@@ -1,10 +1,10 @@
-from enum import StrEnum
+from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel
 
 
-class ApiMessageType(StrEnum):
+class ApiMessageType(str, Enum):
     AGENT_JSON = "agent_json"
     AGENT_MESSAGE = "agent_message"
     AGENT_STOP = "stop"
