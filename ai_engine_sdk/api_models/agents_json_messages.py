@@ -1,5 +1,5 @@
 import logging
-from enum import StrEnum
+from enum import Enum
 from typing import Union, Dict, Any, Literal, get_args, get_origin
 
 from pydantic import BaseModel
@@ -15,7 +15,7 @@ class TaskOption(BaseModel):
     title: str
 
 
-class AgentJsonMessageTypes(StrEnum):
+class AgentJsonMessageTypes(str, Enum):
     TASK_LIST = "TASK_LIST"
     OPTIONS = "OPTIONS"
     CONFIRMATION = "CONFIRMATION"

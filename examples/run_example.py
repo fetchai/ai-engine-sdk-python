@@ -36,7 +36,7 @@ async def main():
         empty_count = 0
         session_ended = False
 
-        while empty_count < 12:
+        while empty_count < 100:
             messages: list[ApiBaseMessage] = await session.get_messages()
             if len(messages) == 0:
                 empty_count += 1

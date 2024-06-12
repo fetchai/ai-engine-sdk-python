@@ -1,10 +1,10 @@
-from enum import StrEnum
+from enum import Enum
 from typing import List, Union, Dict, Any, Optional, Literal
 from pydantic import BaseModel
 
 
 # Outgoing messages
-class ApiMessagePayloadTypes(StrEnum):
+class ApiMessagePayloadTypes(str, Enum):
     START = "start"
     USER_JSON = "user_json"
     USER_MESSAGE = "user_message"
@@ -20,7 +20,7 @@ class ApiSubmitMessage(BaseModel):
 
 class ApiSelectedTasks(BaseModel):
     type: str = "task_list"
-    selection: List[int]
+    selection: List[Union[int,str]]
 
 
 class ApiNewSessionRequest(BaseModel):

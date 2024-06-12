@@ -118,7 +118,7 @@ class Session:
                 'message_id': str(uuid4()).lower(),
                 'referral_id': selection.id,
                 'user_json': {
-                    'type': 'task_list',
+                    'type': selection.type,
                     'selection': [o.key for o in options],
                 }
             })
