@@ -71,8 +71,6 @@ def is_agent_json_confirmation_message(message_type: str) -> bool:
 def is_task_selection_message(message_type: str) -> bool:
     union_of_type = TaskSelectionTypes
     allowed_values = [literal for lit in get_args(union_of_type) for literal in get_args(lit)]
-    logger.debug(f"Allowed values: {allowed_values}")
-    logger.debug(f"Message type : {message_type}")
     return message_type.upper() in allowed_values
 
 

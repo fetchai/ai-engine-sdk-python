@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+from pprint import pformat
 from typing import Optional, List, Union
 from uuid import uuid4
 
@@ -75,10 +76,12 @@ async def make_api_request(
     }
 
     async with aiohttp.ClientSession() as session:
+        logger.debug(f"\n\n 📤 Request triggered : {method} {api_base_url}{endpoint}")
+        logger.debug(f"{body=}")
+        logger.debug("---------------------------\n\n")
         async with session.request(method, f"{api_base_url}{endpoint}", headers=headers, data=body) as response:
             if response.status != 200:
                 raise Exception(f"Request failed with status {response.status} to {endpoint}")
-
             return await response.json()
 
 
@@ -118,7 +121,7 @@ class Session:
                 'message_id': str(uuid4()).lower(),
                 'referral_id': selection.id,
                 'user_json': {
-                    'type': selection.type,
+                    'type': selection.type.lower(),
                     'selection': [o.key for o in options],
                 }
             })
@@ -170,8 +173,8 @@ class Session:
             message: dict = json.loads(item)
             if message['message_id'] in self._message_ids:
                 continue
-
-            logger.info(f"Message received: {message}")
+            logger.debug(f"\n 📥 Message received: {pformat(message)} \n")
+            logger.debug(f"----------------- \n")
             if is_api_agent_json_message(message):
                 agent_json: dict = message['agent_json']
                 agent_json_type: str = agent_json['type'].upper()
