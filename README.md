@@ -51,7 +51,7 @@ public_group = next(
 )
 ```
 
-If you would like to use the functions in your own **My Functions** function group instead then you can use this filter instead:
+If you would like to use the functions in your own **My Functions** function group, you can use this filter instead:
 
 ```python
 my_group = next(
