@@ -42,7 +42,6 @@ from .llm_models import (
 logger = logging.getLogger(__name__)
 
 default_api_base_url = "https://agentverse.ai"
-default_api_base_url = "http://localhost:8000"
 
 
 class CreditBalance(BaseModel):
