@@ -394,20 +394,13 @@ class AiEngine:
     async def share_function_group(
         self,
         function_group_id: str,
-        target_user_id: str | None = None,
-        target_user_email: str | None = None,
+        target_user_email: str,
     ) -> dict:
 
-        # TODO: uncomment and take care of every case
-        if not any([target_user_id, target_user_email]):
-            raise Exception("You must provide user_id OR email")
-
         payload = {
-            # "user_id_to_add_permission": "",
             "user_email_to_add_permission": target_user_email,
             "action": "RETRIEVE"
         }
-        # function_group_id = ...
         raw_response: dict = await make_api_request(
             api_base_url=self._api_base_url,
             api_key=self._api_key,
