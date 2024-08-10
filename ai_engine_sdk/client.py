@@ -281,7 +281,6 @@ class AiEngine:
         return privateGroups + publicGroups
 
     async def get_public_function_groups(self) -> List[FunctionGroup]:
-        print("HEEELLLLOOOO")
         raw_response: dict = await make_api_request(
             api_base_url=self._api_base_url,
             api_key=self._api_key,
@@ -296,7 +295,6 @@ class AiEngine:
         )
 
     async def get_private_function_groups(self) -> List[FunctionGroup]:
-        print("HEEELLLLOOOO PRIVATE")
         raw_response: dict = await make_api_request(
             api_base_url=self._api_base_url,
             api_key=self._api_key,
@@ -418,7 +416,4 @@ class AiEngine:
             endpoint=f"/v1beta1/function-groups/{function_group_id}/permissions/",
             payload=payload
         )
-        print("!!!!!!!!!!!!")
-        print(raw_response)
-        print("!!!!!!!!!!!!")
         return raw_response
