@@ -32,7 +32,7 @@ DefaultModelIds: List[KnownModelId] = [
     "ml-recommender-01",
 ]
 
-DefaultModelId: KnownModelId = "talkative-01"
+DefaultModelId: KnownModelId = "next-gen"
 
 
 def get_model_id(model: Union[KnownModelId, CustomModel]) -> str:
