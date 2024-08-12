@@ -264,7 +264,7 @@ class Session:
 
 class AiEngine:
     def __init__(self, api_key: str, options: Optional[dict] = None):
-        self._api_base_url = options.get('apiBaseUrl') if options and 'apiBaseUrl' in options else default_api_base_url
+        self._api_base_url = options.get('api_base_url') if options and 'api_base_url' in options else default_api_base_url
         self._api_key = api_key
 
     ####
