@@ -14,6 +14,7 @@ class CreateFunctionGroupAndShare:
             target_user_email: str,
     ) -> dict:
         # Create a function group
+
         created_function_group: FunctionGroup = await self.client.create_function_group(is_private=fg_is_private, name=fg_name)
 
         # Share function group

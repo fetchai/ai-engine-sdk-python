@@ -323,6 +323,7 @@ class AiEngine:
             endpoint="/v1beta1/function-groups/",
             payload=payload
         )
+        logger.debug(f"Function group created: {raw_response['uuid']}")
         return FunctionGroup(**raw_response)
 
     ####
@@ -408,4 +409,5 @@ class AiEngine:
             endpoint=f"/v1beta1/function-groups/{function_group_id}/permissions/",
             payload=payload
         )
+        logger.debug(f"FG successfully shared: {function_group_id} with {target_user_email}")
         return raw_response
