@@ -15,7 +15,6 @@
 poetry add ai-engine-sdk
 # or 
 pip install ai-engine-sdk
-
 ```
 
   
@@ -141,7 +140,13 @@ await session.delete()
 
 If you would like to check out a complete example on how to integrate AI Engine into your app, feel free to checkout [examples/run_example.py](https://github.com/fetchai/ai-engine-sdk-python/blob/master/examples/run_example.py).
 
-  
+ 
+## 🔨 Useful scripts 
+
+### Create function groups and share them with other user
+
+#### Use cases:
+- 
 
 ## ✨ Contributing
 
