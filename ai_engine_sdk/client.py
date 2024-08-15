@@ -7,7 +7,7 @@ from typing import Optional, List, Union
 from uuid import uuid4
 
 import aiohttp
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from .api_models.agents_json_messages import (
     ConfirmationMessage,
@@ -63,8 +63,9 @@ class FunctionGroup(BaseModel):
 
 
 class CreateFunctionGroupSchema(BaseModel):
+    # Not working, this is pydantic v2 style and we still on the v1
     name: str
-    isPrivate: bool
+    is_private: bool = Field(serialization_alias="isPrivate")
 
 
 async def make_api_request(
