@@ -1,98 +1,106 @@
-## ⭐️ Features
-
-- Access to latest AI Engine features
-
-- Simple and intuitive API
-
+## ⭐️ Features  
   
-
-## 📦 Getting Started
-
+- Access to latest AI Engine features  
   
-
-```bash
-
-poetry add ai-engine-sdk
+- Simple and intuitive API  
+  
+    
+  
+## 📦 Getting Started  
+  
+    
+```bash  
+  
+poetry add ai-engine-sdk  
 # or 
-pip install ai-engine-sdk
-
-```
-
+pip install ai-engine-sdk  
+```  
+  
+    
+### Using the Chat API  
+  
+Before you start to integrate the AI Engine into your app, you might want to get familiar with [agent functions](https://fetch.ai/docs/guides/agents/intermediate/agent-functions).  
+  
+    
+  
+#### Creating the AIEngine client object  
+  
+To find out how to generate an <code>apiKey</code> check out the documentation regarding [Agentverse API keys](https://fetch.ai/docs/guides/apis/agent-function-creation-apis).  
+  
+```python  
+from ai_engine_sdk import AiEngine  
+ai_engine: AiEngine = AiEngine(api_key)  
+  
+```  
+  
+    
+#### Querying the id of the function group where our to-be-used function(s) belong  
+  
+```python  
+function_groups: list[FunctionGroup] = await ai_engine.get_function_groups()  
+  
+public_group = next(  
+    (g for g in function_groups if g.name == "Fetch Verified"), None  
+)  
+```  
+  
+If you would like to use the functions in your own **My Functions** function group, you can use this filter instead:  
+  
+```python  
+my_group = next(  
+    (g for g in function_groups if g.name == "My Functions"), None  
+)  
+```  
   
 
-### Using the Chat API
+#### Sharing function groups
+##### **Purpose**: 
+Allow to other users to use `functions`, under a concrete `function-group`, without replicating that `function` or allowing them alter those `functions`  or `funtion-group` data.
 
-Before you start to integrate the AI Engine into your app, you might want to get familiar with [agent functions](https://fetch.ai/docs/guides/agents/intermediate/agent-functions).
-
-  
-
-#### Creating the AIEngine client object
-
-To find out how to generate an <code>apiKey</code> check out the documentation regarding [Agentverse API keys](https://fetch.ai/docs/guides/apis/agent-function-creation-apis).
+##### How to:
+If you wish to give access  to a certain `function-group`  (use, not alter the data/state of it), you can use the following method in the following way:
 
 ```python
+# assuming `ai_engine` is a valid instance of AiEngine
 
-
-from ai_engine_sdk import AiEngine
-ai_engine: AiEngine = AiEngine(api_key)
-
-```
-
-  
-
-#### Querying the id of the function group where our to-be-used function(s) belong
-
-```python
-function_groups: list[FunctionGroup] = await ai_engine.get_function_groups()
-
-public_group = next(
-	(g for g in function_groups if g.name == "Fetch Verified"), 
-	None
+what_function_group_identifier_i_want_share="normally-this-is-an-uuid4"
+user_email_i_want_to_share_the_function_group_with = "random@domain.com"
+await ai_engine.share_function_group(
+	function_group_id=what_function_group_identifier_i_want_share,
+	target_user_email=user_email_i_want_to_share_the_function_group_with
 )
 ```
 
-If you would like to use the functions in your own **My Functions** function group, you can use this filter instead:
+Now, if you were requesting the available `function-groups` for the user with email assigned to the `target_user_email` argument, the `function-group` with the id assigned to `function_group_id`.
 
-```python
-my_group = next(
-	(g for g in function_groups if g.name == "My Functions"), 
-	None
-)
-```
-
+You can check that by using the `AiEngine.get_function_groups` method.
+#### Creating a session with the AI Engine using the <code>functionGroupId</code> fetched before  
   
-
-#### Creating a session with the AI Engine using the <code>functionGroupId</code> fetched before
-
-```python
-session = await ai_engine.create_session(function_group=public_group.uuid)
-```
-
+```python  
+session = await ai_engine.create_session(function_group=public_group.uuid)  
+```  
   
-
-#### Starting the conversation with an arbitrary objective
-
-```python
+    
+#### Starting the conversation with an arbitrary objective  
+  
+```python  
 await session.start(objective)
-```
-
+```  
   
-
-#### Querying new messages
-
-You might want to query new messages regularly ...
-
+    
+#### Querying new messages  
   
-
-```python
-
-while True:
-	messages: list[ApiBaseMessage] = await session.get_messages()
-	# throttling
-	sleep(3)
-
-```
-
+You might want to query new messages regularly ...  
+  
+    
+  
+```python  
+  
+while True:  
+    messages: list[ApiBaseMessage] = await session.get_messages()
+    # throttling
+    sleep(3)  
+```  
   
 
 #### Checking the type of the new message
@@ -138,21 +146,28 @@ await session.delete()
 ```
 
   
-
-If you would like to check out a complete example on how to integrate AI Engine into your app, feel free to checkout [examples/run_example.py](https://github.com/fetchai/ai-engine-sdk-python/blob/master/examples/run_example.py).
-
+    
+If you would like to check out a complete example on how to integrate AI Engine into your app, feel free to checkout [examples/run_example.py](https://github.com/fetchai/ai-engine-sdk-python/blob/master/examples/run_example.py).  
   
-
-## ✨ Contributing
-
+   
+## 🔨 Useful scripts   
+### Create function groups and share them with other user
+#### Use cases:  
+- Test in different environments the function-group creation and sharing.
+### List function groups by user 
+List the function belonging to the user owning the AV_API_TOKEN.
+#### Use cases:
+#### Share function group
+Share an existing function group by providing the id (you can fetch via ['list function groups'](#list-function-groups-by-user)
+## ✨ Contributing  
   
-
-All contributions are welcome! Remember, contribution includes not only code, but any help with docs or issues raised by other developers. See our [contribution guidelines](https://github.com/fetchai/ai-engine-sdk-js/blob/main/CONTRIBUTING.md) for more details.
-
+    
   
-
-### ❓ Issues, Questions, and Discussions
-
+All contributions are welcome! Remember, contribution includes not only code, but any help with docs or issues raised by other developers. See our [contribution guidelines](https://github.com/fetchai/ai-engine-sdk-js/blob/main/CONTRIBUTING.md) for more details.  
+  
+    
+  
+### ❓ Issues, Questions, and Discussions  
   
 
 We use [GitHub Issues](https://github.com/fetchai/ai-engine-sdk-python/issues) for tracking requests and bugs.

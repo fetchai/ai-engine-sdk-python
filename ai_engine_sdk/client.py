@@ -1,12 +1,13 @@
 import asyncio
 import json
 import logging
+import re
 from pprint import pformat
 from typing import Optional, List, Union
 from uuid import uuid4
 
 import aiohttp
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from .api_models.agents_json_messages import (
     ConfirmationMessage,
@@ -61,6 +62,12 @@ class FunctionGroup(BaseModel):
     isPrivate: bool
 
 
+class CreateFunctionGroupSchema(BaseModel):
+    # Not working, this is pydantic v2 style and we still on the v1
+    name: str
+    is_private: bool = Field(serialization_alias="isPrivate")
+
+
 async def make_api_request(
         api_base_url: str,
         api_key: str,
@@ -80,7 +87,7 @@ async def make_api_request(
         logger.debug(f"{body=}")
         logger.debug("---------------------------\n\n")
         async with session.request(method, f"{api_base_url}{endpoint}", headers=headers, data=body) as response:
-            if response.status != 200:
+            if not bool(re.search(pattern="^2..$", string=str(response.status))):
                 raise Exception(f"Request failed with status {response.status} to {endpoint}")
             return await response.json()
 
@@ -258,10 +265,15 @@ class Session:
 
 class AiEngine:
     def __init__(self, api_key: str, options: Optional[dict] = None):
-        self._api_base_url = options.get('apiBaseUrl') if options and 'apiBaseUrl' in options else default_api_base_url
+        self._api_base_url = options.get('api_base_url') if options and 'api_base_url' in options else default_api_base_url
         self._api_key = api_key
 
+    ####
+    # Function groups
+    ####
+
     async def get_function_groups(self) -> List[FunctionGroup]:
+        logger.debug("get_function_groups")
         publicGroups, privateGroups = await asyncio.gather(
             self.get_public_function_groups(),
             self.get_private_function_groups()
@@ -289,7 +301,6 @@ class AiEngine:
             method='GET',
             endpoint="/v1beta1/function-groups/"
         )
-
         return list(
             map(
                 lambda item: FunctionGroup.parse_obj(item),
@@ -297,14 +308,28 @@ class AiEngine:
             )
         )
 
-    async def get_credits(self) -> CreditBalance:
-        response = await make_api_request(self._api_base_url, self._api_key, 'GET', "/v1beta1/engine/credit/info")
-        return CreditBalance(
-            totalCredits=response['total_credit'],
-            usedCredits=response['used_credit'],
-            availableCredits=response['available_credit']
+    async def create_function_group(
+            self,
+            is_private: bool,
+            name: str
+    ) -> FunctionGroup:
+        payload = {
+            "isPrivate": is_private,
+            "name": name
+        }
+        raw_response: dict = await make_api_request(
+            api_base_url=self._api_base_url,
+            api_key=self._api_key,
+            method='POST',
+            endpoint="/v1beta1/function-groups/",
+            payload=payload
         )
+        logger.debug(f"Function group created: {raw_response['uuid']}")
+        return FunctionGroup(**raw_response)
 
+    ####
+    # Model
+    ####
     async def get_models(self) -> List[Model]:
         pending_credits = [self.get_model_credits(model_id) for model_id in DefaultModelIds]
 
@@ -324,6 +349,17 @@ class AiEngine:
 
         return models
 
+    ####
+    # Credit
+    ####
+    async def get_credits(self) -> CreditBalance:
+        response = await make_api_request(self._api_base_url, self._api_key, 'GET', "/v1beta1/engine/credit/info")
+        return CreditBalance(
+            totalCredits=response['total_credit'],
+            usedCredits=response['used_credit'],
+            availableCredits=response['available_credit']
+        )
+
     async def get_model_credits(self, model: Union[KnownModelId, CustomModel]) -> int:
         model_id = get_model_id(model)
         response = await make_api_request(
@@ -334,6 +370,9 @@ class AiEngine:
         )
         return response['model_tokens'].get(model_id, 0)
 
+    ####
+    # Session
+    ####
     async def create_session(self, function_group: str, opts: Optional[dict] = None) -> Session:
         request_payload = ApiNewSessionRequest(
             email=opts.get('email') if opts else "",
@@ -350,3 +389,26 @@ class AiEngine:
         )
 
         return Session(self._api_base_url, self._api_key, response['session_id'], function_group)
+
+    ####
+    # Permissions
+    ####
+    async def share_function_group(
+        self,
+        function_group_id: str,
+        target_user_email: str,
+    ) -> dict:
+
+        payload = {
+            "user_email_to_add_permission": target_user_email,
+            "action": "RETRIEVE"
+        }
+        raw_response: dict = await make_api_request(
+            api_base_url=self._api_base_url,
+            api_key=self._api_key,
+            method='PUT',
+            endpoint=f"/v1beta1/function-groups/{function_group_id}/permissions/",
+            payload=payload
+        )
+        logger.debug(f"FG successfully shared: {function_group_id} with {target_user_email}")
+        return raw_response
