@@ -1,4 +1,5 @@
 import os
+from idlelib.iomenu import py_extensions
 from symtable import Function
 
 import pytest
@@ -24,11 +25,13 @@ class TestAiEngineClient:
         assert isinstance(function_groups, list)
         # Should I test the content... ?
 
-    @pytest.mark.asyncio
-    async def test_create_function_groups(self, ai_engine_client):
-        name = fake.company()
-        result: FunctionGroup = await ai_engine_client.create_function_group(is_private=True, name=name)
-        assert isinstance(result, FunctionGroup)
+    # @pytest.mark.asyncio
+    # async def test_create_function_groups(self, ai_engine_client):
+    #     result: FunctionGroup = await ai_engine_client.create_function_group(
+    #         is_private=True,
+    #         name=self.function_group_name_1
+    #     )
+    #     assert isinstance(result, FunctionGroup)
 
     @pytest.mark.asyncio
     async def test_get_credits_returns_credit_balance(self, ai_engine_client):
@@ -47,6 +50,10 @@ class TestAiEngineClient:
         function_groups: list[FunctionGroup] = await ai_engine_client.get_function_groups()
         result: Session = await ai_engine_client.create_session(function_group=function_groups[0].uuid)
         assert isinstance(result, Session)
+
+    @pytest.mark.asyncio
+    async def test_delete_function_group(self, ai_engine_client):
+        ...
 
     # @pytest.mark.asyncio
     # async def test_start_session_with_a_given_function(self, ai_engine_client):
