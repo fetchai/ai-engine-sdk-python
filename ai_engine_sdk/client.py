@@ -107,12 +107,12 @@ class Session:
             api_key=self._api_key,
             method='POST',
             endpoint=f"/v1beta1/engine/chat/sessions/{self.session_id}/submit",
-            payload={'payload': payload.dict()}
+            payload={'payload': payload.model_dump()}
         )
 
     async def start(self, objective: str, context: Optional[str] = None):
         await self._submit_message(
-            payload=ApiStartMessage.parse_obj({
+            payload=ApiStartMessage.model_validate({
                 'session_id': self.session_id,
                 'bucket_id': self.function_group,
                 'message_id': str(uuid4()).lower(),
@@ -123,7 +123,7 @@ class Session:
 
     async def submit_task_selection(self, selection: TaskSelectionMessage, options: list[TaskOption]):
         await self._submit_message(
-            payload=ApiUserJsonMessage.parse_obj({
+            payload=ApiUserJsonMessage.model_validate({
                 'session_id': self.session_id,
                 'message_id': str(uuid4()).lower(),
                 'referral_id': selection.id,
@@ -136,7 +136,7 @@ class Session:
 
     async def submit_response(self, query: AgentMessage, response: str):
         await self._submit_message(
-            payload=ApiUserMessageMessage.parse_obj(
+            payload=ApiUserMessageMessage.model_validate(
                 {
                     'session_id': self.session_id,
                     'message_id': str(uuid4()).lower(),
@@ -148,7 +148,7 @@ class Session:
 
     async def submit_confirmation(self, confirmation: ConfirmationMessage):
         await self._submit_message(
-            payload=ApiUserMessageMessage.parse_obj({
+            payload=ApiUserMessageMessage.model_validate({
                 'session_id': self.session_id,
                 'message_id': str(uuid4()).lower(),
                 'referral_id': confirmation.id,
@@ -158,7 +158,7 @@ class Session:
 
     async def reject_confirmation(self, confirmation: ConfirmationMessage, reason: str):
         await self._submit_message(
-            payload=ApiUserMessageMessage.parse_obj({
+            payload=ApiUserMessageMessage.model_validate({
                 'session_id': self.session_id,
                 'message_id': str(uuid4()).lower(),
                 'referral_id': confirmation.id,
@@ -188,7 +188,7 @@ class Session:
                 if is_task_selection_message(message_type=agent_json_type):
                     indexed_task_options: dict = get_indexed_task_options_from_raw_api_response(raw_api_response=message)
                     newMessages.append(
-                        TaskSelectionMessage.parse_obj({
+                        TaskSelectionMessage.model_validate({
                             'type': agent_json_type,
                             'id': message['message_id'],
                             'timestamp': message['timestamp'],
@@ -198,7 +198,7 @@ class Session:
                     )
                 elif is_api_context_json(message_type=agent_json_type, agent_json_text=agent_json['text']):
                     newMessages.append(
-                        ConfirmationMessage.parse_obj({
+                        ConfirmationMessage.model_validate({
                             'id': message['message_id'],
                             'timestamp': message['timestamp'],
                             'text': agent_json['text'],
@@ -208,7 +208,7 @@ class Session:
                     )
                 elif is_data_request_message(message_type=agent_json_type):
                     newMessages.append(
-                        DataRequestMessage.parse_obj({
+                        DataRequestMessage.model_validate({
                             "id": message['message_id'],
                             "text": agent_json['text'],
                             "type": agent_json_type,
@@ -220,7 +220,7 @@ class Session:
                     print(f"UNKNOWN-JSON: {message}")
             elif is_api_agent_info_message(message):
                 newMessages.append(
-                    AiEngineMessage.parse_obj({
+                    AiEngineMessage.model_validate({
                         'id': message['message_id'],
                         'type': 'ai-engine',
                         'timestamp': message['timestamp'],
@@ -229,7 +229,7 @@ class Session:
                 )
             elif is_api_agent_message_message(message):
                 newMessages.append(
-                    AgentMessage.parse_obj({
+                    AgentMessage.model_validate({
                         'id': message['message_id'],
                         'type': 'agent',
                         'timestamp': message['timestamp'],
@@ -239,7 +239,7 @@ class Session:
             elif is_api_stop_message(message):
                 print(f"STOP: {message}")
                 newMessages.append(
-                    StopMessage.parse_obj({
+                    StopMessage.model_validate({
                         'id': message['message_id'],
                         'timestamp': message['timestamp'],
                         'type': 'stop',
@@ -289,7 +289,7 @@ class AiEngine:
         )
         return list(
             map(
-                lambda item: FunctionGroup.parse_obj(item),
+                lambda item: FunctionGroup.model_validate(item),
                 raw_response
             )
         )
@@ -303,7 +303,7 @@ class AiEngine:
         )
         return list(
             map(
-                lambda item: FunctionGroup.parse_obj(item),
+                lambda item: FunctionGroup.model_validate(item),
                 raw_response
             )
         )
@@ -385,7 +385,7 @@ class AiEngine:
             api_key=self._api_key,
             method='POST',
             endpoint="/v1beta1/engine/chat/sessions",
-            payload=request_payload.dict()
+            payload=request_payload.model_dump()
         )
 
         return Session(self._api_base_url, self._api_key, response['session_id'], function_group)
