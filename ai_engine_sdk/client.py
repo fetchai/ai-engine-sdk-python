@@ -88,7 +88,7 @@ async def make_api_request(
         logger.debug("---------------------------\n\n")
         async with session.request(method, f"{api_base_url}{endpoint}", headers=headers, data=body) as response:
             if not bool(re.search(pattern="^2..$", string=str(response.status))):
-                raise Exception(f"Request failed with status {response.status} to {endpoint}")
+                raise Exception(f"Request failed with status {response.status} to {method}: {endpoint}")
             return await response.json()
 
 
@@ -334,7 +334,7 @@ class AiEngine:
             method='DELETE',
             endpoint=f"/v1beta1/function-groups/{function_group_id}",
         )
-        logger.debug(f"Function group deleted: {raw_response['uuid']}")
+        logger.debug(f"Function group deleted: {function_group_id}")
     ####
     # Model
     ####
