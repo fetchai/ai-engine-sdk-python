@@ -332,7 +332,7 @@ class AiEngine:
             api_base_url=self._api_base_url,
             api_key=self._api_key,
             method='DELETE',
-            endpoint=f"/v1beta1/function-groups/{function_group_id}",
+            endpoint=f"/v1beta1/function-groups/{function_group_id}/",
         )
         logger.debug(f"Function group deleted: {function_group_id}")
     ####

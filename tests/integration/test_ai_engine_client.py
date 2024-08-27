@@ -36,7 +36,7 @@ class TestAiEngineClient:
         pprint(new_function_group)
         # TearDown + Test
         # 401 when staging or prod
-        # delete_res = await ai_engine_client.delete_function_group(function_group_id=new_function_group.uuid)
+        delete_res = await ai_engine_client.delete_function_group(function_group_id=new_function_group.uuid)
 
     @pytest.mark.asyncio
     async def test_get_credits_returns_credit_balance(self, ai_engine_client: AiEngine):
@@ -70,7 +70,7 @@ class TestAiEngineClient:
 
         # TearDown + Test delete
         # 401 when staging or prod
-        # await ai_engine_client.delete_function_group(function_group_id=new_function_group.uuid)
+        await ai_engine_client.delete_function_group(function_group_id=new_function_group.uuid)
 
 
     # Negative tests
