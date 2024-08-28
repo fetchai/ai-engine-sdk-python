@@ -35,7 +35,6 @@ class TestAiEngineClient:
         assert isinstance(new_function_group, FunctionGroup)
         pprint(new_function_group)
         # TearDown + Test
-        # 401 when staging or prod
         delete_res = await ai_engine_client.delete_function_group(function_group_id=new_function_group.uuid)
 
     @pytest.mark.asyncio
@@ -69,7 +68,6 @@ class TestAiEngineClient:
         assert any(filter(lambda x: x.uuid == new_function_group.uuid, function_groups))
 
         # TearDown + Test delete
-        # 401 when staging or prod
         await ai_engine_client.delete_function_group(function_group_id=new_function_group.uuid)
 
 
