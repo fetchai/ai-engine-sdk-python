@@ -27,7 +27,7 @@ from .api_models.api_message import (
 from .api_models.api_models import (
     ApiNewSessionRequest,
     is_api_context_json,
-    ApiStartMessage, ApiMessagePayload, ApiUserJsonMessage, ApiUserMessageMessage
+    ApiStartMessage, ApiMessagePayload, ApiUserJsonMessage, ApiUserMessageMessage, ApiUserMessageExecuteFunctions
 )
 from .api_models.parsing_utils import get_indexed_task_options_from_raw_api_response
 from .llm_models import (
@@ -262,6 +262,14 @@ class Session:
             endpoint=f"/v1beta1/engine/chat/sessions/{self.session_id}"
         )
 
+    async def execute_function(self, function_ids: list[str], objective: str, context: str|None = None):
+        await self._submit_message(
+            payload=ApiUserMessageExecuteFunctions.parse_obj({
+                "functions": function_ids,
+                "objective": objective,
+                "context": context or ""
+            })
+        )
 
 class AiEngine:
     def __init__(self, api_key: str, options: Optional[dict] = None):

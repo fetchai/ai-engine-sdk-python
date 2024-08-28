@@ -8,7 +8,7 @@ class ApiMessagePayloadTypes(str, Enum):
     START = "start"
     USER_JSON = "user_json"
     USER_MESSAGE = "user_message"
-
+    EXECUTE_FUNCTIONS = "execute_functions"
 
 class ApiMessagePayload(BaseModel):
     session_id: str
@@ -53,6 +53,15 @@ class ApiUserMessageMessage(ApiMessagePayload):
     message_id: str
     referral_id: str
     user_message: str
+
+
+class ApiUserMessageExecuteFunctions(ApiMessagePayload):
+    type: Literal[ApiMessagePayloadTypes.USER_MESSAGE] = ApiMessagePayloadTypes.EXECUTE_FUNCTIONS
+
+    functions: list[str]
+    objective: str
+    context: str
+
 
 
 # -----------
