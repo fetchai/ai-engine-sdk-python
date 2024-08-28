@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ai-engine-sdk"
-version = "0.1.1"
+version = "0.1.2"
 description = ""
 authors = ["Xavier <xavier.peiro@fetch.ai>"]
 readme = "README.md"
