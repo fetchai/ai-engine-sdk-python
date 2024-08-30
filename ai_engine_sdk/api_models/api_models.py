@@ -56,7 +56,7 @@ class ApiUserMessageMessage(ApiMessagePayload):
 
 
 class ApiUserMessageExecuteFunctions(ApiMessagePayload):
-    type: Literal[ApiMessagePayloadTypes.USER_MESSAGE] = ApiMessagePayloadTypes.EXECUTE_FUNCTIONS
+    type: Literal[ApiMessagePayloadTypes.EXECUTE_FUNCTIONS] = ApiMessagePayloadTypes.EXECUTE_FUNCTIONS
 
     functions: list[str]
     objective: str
