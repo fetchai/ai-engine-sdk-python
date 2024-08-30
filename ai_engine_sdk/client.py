@@ -2,7 +2,7 @@ import asyncio
 import json
 import logging
 import re
-from pprint import pformat, pprint
+from pprint import pformat
 from typing import Optional, List, Union
 from uuid import uuid4
 
@@ -286,7 +286,7 @@ class AiEngine:
             self.get_public_function_groups(),
             self.get_private_function_groups()
         )
-        return privateGroups
+        return privateGroups + privateGroups
 
     async def get_public_function_groups(self) -> List[FunctionGroup]:
         raw_response: dict = await make_api_request(
@@ -363,7 +363,6 @@ class AiEngine:
             method='GET',
             endpoint=f"/v1beta1/function/{function_id}/groups"
         )
-        pprint(raw_response)
         return list(
             map(
                 lambda item: FunctionGroup.model_validate(item),
@@ -380,7 +379,6 @@ class AiEngine:
             method='GET',
             endpoint=f"/v1beta1/function-groups/{function_group_id}/functions/"
         )
-        pprint(raw_response)
         result = []
         if "functions" in raw_response:
             list(
