@@ -286,7 +286,7 @@ class AiEngine:
             self.get_public_function_groups(),
             self.get_private_function_groups()
         )
-        return privateGroups + privateGroups
+        return privateGroups + publicGroups
 
     async def get_public_function_groups(self) -> List[FunctionGroup]:
         raw_response: dict = await make_api_request(
