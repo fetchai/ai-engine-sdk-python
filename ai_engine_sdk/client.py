@@ -94,7 +94,7 @@ async def make_api_request(
 
 class Session:
     """
-    Represents a session with an API, managing messages and interactions within a specific function group.
+    Represents a session with an API, managing messages and interactions within a specific function group or functions.
 
     Attributes:
         _api_base_url (str): The base URL for the API.
