@@ -3,6 +3,7 @@ import os
 import pytest
 
 from ai_engine_sdk import AiEngine, FunctionGroup
+from ai_engine_sdk.client import Session
 
 
 def get_ai_engine_client(api_key: str, environment_domain: str) -> AiEngine:
@@ -25,3 +26,12 @@ def ai_engine_client(request) -> AiEngine:
 @pytest.fixture(scope="module")
 async def function_groups(ai_engine_client) -> list[FunctionGroup]:
     function_groups: list[FunctionGroup] = await ai_engine_client.get_function_groups()
+    return function_groups
+
+# @pytest.fixture(scope="module")
+# async def session_with_next_generation_model(ai_engine_client) -> Session:
+#     # TODO: We need a concrete function group id for the integration tests in the CI.
+#     session: Session = await ai_engine_client.create_session(
+#         function_group=function_groups, opts={"model": "next-gen"}
+#     )
+#     return session

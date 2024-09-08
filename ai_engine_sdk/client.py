@@ -62,6 +62,15 @@ class FunctionGroup(BaseModel):
     isPrivate: bool
 
 
+class Function(BaseModel):
+    uuid: str
+    name: str
+
+
+class FunctionGroupFunctions(BaseModel):
+    name: str
+
+
 class CreateFunctionGroupSchema(BaseModel):
     # Not working, this is pydantic v2 style and we still on the v1
     name: str
@@ -279,7 +288,6 @@ class AiEngine:
     ####
     # Function groups
     ####
-
     async def get_function_groups(self) -> List[FunctionGroup]:
         logger.debug("get_function_groups")
         publicGroups, privateGroups = await asyncio.gather(
@@ -343,6 +351,67 @@ class AiEngine:
             endpoint=f"/v1beta1/function-groups/{function_group_id}/",
         )
         logger.debug(f"Function group deleted: {function_group_id}")
+        raw_response: dict = await make_api_request(
+            api_base_url=self._api_base_url,
+            api_key=self._api_key,
+            method='GET',
+            endpoint="/v1beta1/function-groups/public/"
+        )
+        return list(
+            map(
+                lambda item: FunctionGroup.model_validate(item),
+                raw_response
+            )
+        )
+
+    async def get_function_group_by_function(self, function_id: str):
+        raw_response: dict = await make_api_request(
+            api_base_url=self._api_base_url,
+            api_key=self._api_key,
+            method='GET',
+            endpoint=f"/v1beta1/function/{function_id}/groups"
+        )
+        return list(
+            map(
+                lambda item: FunctionGroup.model_validate(item),
+                raw_response
+            )
+        )
+    ###
+    # Functions
+    ###
+    async def get_functions_by_function_group(self, function_group_id: str) -> list[FunctionGroupFunctions]:
+        raw_response: dict = await make_api_request(
+            api_base_url=self._api_base_url,
+            api_key=self._api_key,
+            method='GET',
+            endpoint=f"/v1beta1/function-groups/{function_group_id}/functions/"
+        )
+        result = []
+        if "functions" in raw_response:
+            list(
+                map(
+                    lambda function_name: FunctionGroupFunctions.parse_obj({"name": function_name}),
+                    raw_response["functions"]
+                )
+            )
+
+        return result
+
+
+    async def get_functions(self) -> list[Function]:
+        raw_response: dict = await make_api_request(
+            api_base_url=self._api_base_url,
+            api_key=self._api_key,
+            method='GET',
+            endpoint=f"/v1beta1/functions/"
+        )
+        return list(
+            map(
+                lambda item: Function.parse_obj(item),
+                raw_response
+            )
+        )
     ####
     # Model
     ####
