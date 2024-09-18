@@ -289,8 +289,8 @@ class Session:
                             'id': message['message_id'],
                             'timestamp': message['timestamp'],
                             'text': agent_json['text'],
-                            'model': agent_json['context_json']['digest'],
-                            'payload': agent_json['context_json']['args'],
+                            'model': "nextgen",#agent_json['context_json']['digest'],
+                            'payload': agent_json['context_json'],
                         })
                     )
                 elif is_data_request_message(message_type=agent_json_type):
