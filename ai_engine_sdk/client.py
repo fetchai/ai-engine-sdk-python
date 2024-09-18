@@ -102,7 +102,27 @@ async def make_api_request(
 
 
 class Session:
+    """
+    Represents a session with an API, managing messages and interactions within a specific function group or functions.
+
+    Attributes:
+        _api_base_url (str): The base URL for the API.
+        _api_key (str): The AGENTVERSE API key used for authentication.
+        session_id (str): The unique identifier for the session.
+        function_group (str): The function group associated with this session.
+        _messages (List[ApiBaseMessage]): A list to store messages associated with the session.
+        _message_ids (set[str]): A set to store unique message IDs to prevent duplication.
+    """
     def __init__(self, api_base_url: str, api_key: str, session_id: str, function_group: str):
+        """
+        Initializes a new session with the given parameters.
+
+        Args:
+            api_base_url (str): The base URL for the API.
+            api_key (str): The AGENTVERSE API key used for authentication.
+            session_id (str): The unique identifier for the session.
+            function_group (str): The function-group associated with this session.
+        """
         self._api_base_url = api_base_url
         self._api_key = api_key
         self.session_id = session_id
@@ -111,6 +131,15 @@ class Session:
         self._message_ids: set[str] = set()
 
     async def _submit_message(self, payload: ApiMessagePayload):
+        """
+        Submits a message to the API for the current session.
+
+        Args:
+            payload (ApiMessagePayload): The payload of the message to be submitted.
+
+        Returns:
+            None
+        """
         await make_api_request(
             api_base_url=self._api_base_url,
             api_key=self._api_key,
@@ -120,6 +149,13 @@ class Session:
         )
 
     async def start(self, objective: str, context: Optional[str] = None):
+        """
+        Starts a new session by submitting an initial message to the ai-engine API.
+
+        Args:
+            objective (str): The primary objective or goal of the actor (user, program, whatever...).
+            context (Optional[str]): Additional context for the session, if any.
+        """
         await self._submit_message(
             payload=ApiStartMessage.model_validate({
                 'session_id': self.session_id,
@@ -131,6 +167,13 @@ class Session:
         )
 
     async def submit_task_selection(self, selection: TaskSelectionMessage, options: list[TaskOption]):
+        """
+        Submits message with the selected task to the ai-engine API.
+
+        Args:
+            selection (TaskSelectionMessage): The task selection message being responded to.
+            options (list[TaskOption]): The list of selected tasks.
+        """
         await self._submit_message(
             payload=ApiUserJsonMessage.model_validate({
                 'session_id': self.session_id,
@@ -144,6 +187,13 @@ class Session:
         )
 
     async def submit_response(self, query: AgentMessage, response: str):
+        """
+        Send an answer to a question asked by the agent.
+
+        Args:
+            query (AgentMessage): The agent's message to which the user is responding.
+            response (str): The user's response to the agent's message.
+        """
         await self._submit_message(
             payload=ApiUserMessageMessage.model_validate(
                 {
@@ -156,6 +206,12 @@ class Session:
         )
 
     async def submit_confirmation(self, confirmation: ConfirmationMessage):
+        """
+        Submits a confirmation message for an agent's question to the ai-engine AP.
+
+        Args:
+            confirmation (ConfirmationMessage): The (confirmation) message being responded to.
+        """
         await self._submit_message(
             payload=ApiUserMessageMessage.model_validate({
                 'session_id': self.session_id,
@@ -166,6 +222,14 @@ class Session:
         )
 
     async def reject_confirmation(self, confirmation: ConfirmationMessage, reason: str):
+        """
+        Rejects a confirmation with a given reason and submits the response to the API.
+        The counterpart of `submit_confirmation`.
+
+        Args:
+            confirmation (ConfirmationMessage): The confirmation message being rejected.
+            reason (str): The reason for rejecting the confirmation.
+        """
         await self._submit_message(
             payload=ApiUserMessageMessage.model_validate({
                 'session_id': self.session_id,
@@ -176,6 +240,20 @@ class Session:
         )
 
     async def get_messages(self) -> List[ApiBaseMessage]:
+        """
+        Retrieves new messages for the session from the ai-engine API in order to keep communicating and achieve our task/goal.
+
+
+        If there are any messages in the current session, the request will include a query parameter to only fetch messages
+        after the last received message.
+         The method processes various types of messages from the response and adds them to the session.
+
+        Returns:
+            List[ApiBaseMessage]: A list of new messages parsed from the ai-engine API response. The list contains different types of messages
+            depending on the content of the API response, such as TaskSelectionMessage, ConfirmationMessage, DataRequestMessage, etc.
+
+            Each message type has a different purpose as the name indicates.
+        """
         queryParams = f"?last_message_id={self._messages[-1]['message_id']}" if self._messages else ""
         response = await make_api_request(
             api_base_url=self._api_base_url,
@@ -264,6 +342,9 @@ class Session:
         return newMessages
 
     async def delete(self):
+        """
+        Deletes the current session associated with the current session_id in the ai-engine API.
+        """
         await make_api_request(
             api_base_url=self._api_base_url,
             api_key=self._api_key,
