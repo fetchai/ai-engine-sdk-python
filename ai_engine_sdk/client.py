@@ -27,7 +27,7 @@ from .api_models.api_message import (
 from .api_models.api_models import (
     ApiNewSessionRequest,
     is_api_context_json,
-    ApiStartMessage, ApiMessagePayload, ApiUserJsonMessage, ApiUserMessageMessage
+    ApiStartMessage, ApiMessagePayload, ApiUserJsonMessage, ApiUserMessageMessage, ApiUserMessageExecuteFunctions
 )
 from .api_models.parsing_utils import get_indexed_task_options_from_raw_api_response
 from .llm_models import (
@@ -352,11 +352,21 @@ class Session:
             endpoint=f"/v1beta1/engine/chat/sessions/{self.session_id}"
         )
 
+    async def execute_function(self, function_ids: list[str], objective: str, context: str|None = None):
+        await self._submit_message(
+            payload=ApiUserMessageExecuteFunctions.model_validate({
+                "functions": function_ids,
+                "objective": objective,
+                "context": context or "",
+                'session_id': self.session_id,
+            })
+        )
 
 class AiEngine:
     def __init__(self, api_key: str, options: Optional[dict] = None):
         self._api_base_url = options.get('api_base_url') if options and 'api_base_url' in options else default_api_base_url
         self._api_key = api_key
+
 
     ####
     # Function groups
@@ -464,7 +474,7 @@ class AiEngine:
         if "functions" in raw_response:
             list(
                 map(
-                    lambda function_name: FunctionGroupFunctions.parse_obj({"name": function_name}),
+                    lambda function_name: FunctionGroupFunctions.model_validate({"name": function_name}),
                     raw_response["functions"]
                 )
             )

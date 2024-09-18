@@ -61,6 +61,16 @@ class TestAiEngineClient:
 
 
     @pytest.mark.asyncio
+    async def test_execute_function(self, ai_engine_client: AiEngine, public_function_group: FunctionGroup, valid_public_function_uuid: str):
+        session: Session = await ai_engine_client.create_session(function_group=public_function_group.uuid)
+        result = await session.execute_function(
+            function_ids=[valid_public_function_uuid],
+            objective="Test software",
+            context=""
+        )
+
+
+    @pytest.mark.asyncio
     async def test_create_function_group_and_list_them(self, ai_engine_client: AiEngine):
         name = fake.company()
         new_function_group: FunctionGroup = await ai_engine_client.create_function_group(is_private=True, name=f"TESTS: {name}")

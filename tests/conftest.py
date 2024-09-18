@@ -35,3 +35,16 @@ async def function_groups(ai_engine_client) -> list[FunctionGroup]:
 #         function_group=function_groups, opts={"model": "next-gen"}
 #     )
 #     return session
+
+
+@pytest.fixture(scope="session")
+def valid_public_function_uuid() -> str:
+    # TODO: Do it programmatically (when test fails bc of it will be good moment)
+    # 'Cornerstone Software' from Public fg and staging
+   return "312712ae-eb70-42f7-bb5a-ad21ce6d73c3"
+
+
+@pytest.fixture(scope="session")
+def public_function_group() -> FunctionGroup:
+    # TODO: Do it programmatically (when test fails bc of it will be good moment)
+    return FunctionGroup(uuid="e504eabb-4bc7-458d-aa8c-7c3748f8952c", name="Public", isPrivate=False)
