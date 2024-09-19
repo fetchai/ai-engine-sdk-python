@@ -92,12 +92,14 @@ async def make_api_request(
     }
 
     async with aiohttp.ClientSession() as session:
-        logger.debug(f"\n\n 📤 Request triggered : {method} {api_base_url}{endpoint}")
+        logger.debug(f"\n\n 📤 Request triggered : {
+                     method} {api_base_url}{endpoint}")
         logger.debug(f"{body=}")
         logger.debug("---------------------------\n\n")
         async with session.request(method, f"{api_base_url}{endpoint}", headers=headers, data=body) as response:
             if not bool(re.search(pattern="^2..$", string=str(response.status))):
-                raise Exception(f"Request failed with status {response.status} to {method}: {endpoint}")
+                raise Exception(f"Request failed with status {
+                                response.status} to {method}: {endpoint}")
             return await response.json()
 
 
@@ -113,6 +115,7 @@ class Session:
         _messages (List[ApiBaseMessage]): A list to store messages associated with the session.
         _message_ids (set[str]): A set to store unique message IDs to prevent duplication.
     """
+
     def __init__(self, api_base_url: str, api_key: str, session_id: str, function_group: str):
         """
         Initializes a new session with the given parameters.
@@ -254,12 +257,14 @@ class Session:
 
             Each message type has a different purpose as the name indicates.
         """
-        queryParams = f"?last_message_id={self._messages[-1]['message_id']}" if self._messages else ""
+        queryParams = f"?last_message_id={
+            self._messages[-1]['message_id']}" if self._messages else ""
         response = await make_api_request(
             api_base_url=self._api_base_url,
             api_key=self._api_key,
             method='GET',
-            endpoint=f"/v1beta1/engine/chat/sessions/{self.session_id}/new-messages{queryParams}"
+            endpoint=f"/v1beta1/engine/chat/sessions/{
+                self.session_id}/new-messages{queryParams}"
         )
 
         newMessages: List[ApiBaseMessage] = []
@@ -273,14 +278,15 @@ class Session:
                 agent_json: dict = message['agent_json']
                 agent_json_type: str = agent_json['type'].upper()
                 if is_task_selection_message(message_type=agent_json_type):
-                    indexed_task_options: dict = get_indexed_task_options_from_raw_api_response(raw_api_response=message)
+                    indexed_task_options: dict = get_indexed_task_options_from_raw_api_response(
+                        raw_api_response=message)
                     newMessages.append(
                         TaskSelectionMessage.model_validate({
                             'type': agent_json_type,
                             'id': message['message_id'],
                             'timestamp': message['timestamp'],
                             'text': agent_json['text'],
-                            'options':indexed_task_options
+                            'options': indexed_task_options
                         })
                     )
                 elif is_api_context_json(message_type=agent_json_type, agent_json_text=agent_json['text']):
@@ -289,7 +295,6 @@ class Session:
                             'id': message['message_id'],
                             'timestamp': message['timestamp'],
                             'text': agent_json['text'],
-                            'model': "nextgen",#agent_json['context_json']['digest'],
                             'payload': agent_json['context_json'],
                         })
                     )
@@ -352,7 +357,7 @@ class Session:
             endpoint=f"/v1beta1/engine/chat/sessions/{self.session_id}"
         )
 
-    async def execute_function(self, function_ids: list[str], objective: str, context: str|None = None):
+    async def execute_function(self, function_ids: list[str], objective: str, context: str | None = None):
         await self._submit_message(
             payload=ApiUserMessageExecuteFunctions.model_validate({
                 "functions": function_ids,
@@ -362,15 +367,17 @@ class Session:
             })
         )
 
+
 class AiEngine:
     def __init__(self, api_key: str, options: Optional[dict] = None):
-        self._api_base_url = options.get('api_base_url') if options and 'api_base_url' in options else default_api_base_url
+        self._api_base_url = options.get(
+            'api_base_url') if options and 'api_base_url' in options else default_api_base_url
         self._api_key = api_key
-
 
     ####
     # Function groups
     ####
+
     async def get_function_groups(self) -> List[FunctionGroup]:
         logger.debug("get_function_groups")
         publicGroups, privateGroups = await asyncio.gather(
@@ -463,6 +470,7 @@ class AiEngine:
     ###
     # Functions
     ###
+
     async def get_functions_by_function_group(self, function_group_id: str) -> list[FunctionGroupFunctions]:
         raw_response: dict = await make_api_request(
             api_base_url=self._api_base_url,
@@ -474,13 +482,13 @@ class AiEngine:
         if "functions" in raw_response:
             list(
                 map(
-                    lambda function_name: FunctionGroupFunctions.model_validate({"name": function_name}),
+                    lambda function_name: FunctionGroupFunctions.model_validate(
+                        {"name": function_name}),
                     raw_response["functions"]
                 )
             )
 
         return result
-
 
     async def get_functions(self) -> list[Function]:
         raw_response: dict = await make_api_request(
@@ -498,8 +506,10 @@ class AiEngine:
     ####
     # Model
     ####
+
     async def get_models(self) -> List[Model]:
-        pending_credits = [self.get_model_credits(model_id) for model_id in DefaultModelIds]
+        pending_credits = [self.get_model_credits(
+            model_id) for model_id in DefaultModelIds]
 
         models = [Model(
             id=model_id,
@@ -534,7 +544,8 @@ class AiEngine:
             api_base_url=self._api_base_url,
             api_key=self._api_key,
             method='GET',
-            endpoint=f"/v1beta1/engine/credit/remaining_tokens?models={model_id}"
+            endpoint=f"/v1beta1/engine/credit/remaining_tokens?models={
+                model_id}"
         )
         return response['model_tokens'].get(model_id, 0)
 
@@ -546,7 +557,8 @@ class AiEngine:
             email=opts.get('email') if opts else "",
             functionGroup=function_group,
             preferencesEnabled=False,
-            requestModel=opts.get('model') if opts and 'model' in opts else DefaultModelId
+            requestModel=opts.get(
+                'model') if opts and 'model' in opts else DefaultModelId
         )
         response = await make_api_request(
             api_base_url=self._api_base_url,
@@ -575,8 +587,10 @@ class AiEngine:
             api_base_url=self._api_base_url,
             api_key=self._api_key,
             method='PUT',
-            endpoint=f"/v1beta1/function-groups/{function_group_id}/permissions/",
+            endpoint=f"/v1beta1/function-groups/{
+                function_group_id}/permissions/",
             payload=payload
         )
-        logger.debug(f"FG successfully shared: {function_group_id} with {target_user_email}")
+        logger.debug(f"FG successfully shared: {
+                     function_group_id} with {target_user_email}")
         return raw_response
