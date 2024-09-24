@@ -92,14 +92,12 @@ async def make_api_request(
     }
 
     async with aiohttp.ClientSession() as session:
-        logger.debug(f"\n\n 📤 Request triggered : {
-                     method} {api_base_url}{endpoint}")
+        logger.debug(f"\n\n 📤 Request triggered : {method} {api_base_url}{endpoint}")
         logger.debug(f"{body=}")
         logger.debug("---------------------------\n\n")
         async with session.request(method, f"{api_base_url}{endpoint}", headers=headers, data=body) as response:
             if not bool(re.search(pattern="^2..$", string=str(response.status))):
-                raise Exception(f"Request failed with status {
-                                response.status} to {method}: {endpoint}")
+                raise Exception(f"Request failed with status {response.status} to {method}: {endpoint}")
             return await response.json()
 
 
@@ -257,14 +255,12 @@ class Session:
 
             Each message type has a different purpose as the name indicates.
         """
-        queryParams = f"?last_message_id={
-            self._messages[-1]['message_id']}" if self._messages else ""
+        queryParams = f"?last_message_id={self._messages[-1]['message_id']}" if self._messages else ""
         response = await make_api_request(
             api_base_url=self._api_base_url,
             api_key=self._api_key,
             method='GET',
-            endpoint=f"/v1beta1/engine/chat/sessions/{
-                self.session_id}/new-messages{queryParams}"
+            endpoint=f"/v1beta1/engine/chat/sessions/{self.session_id}/new-messages{queryParams}"
         )
 
         newMessages: List[ApiBaseMessage] = []
@@ -544,8 +540,7 @@ class AiEngine:
             api_base_url=self._api_base_url,
             api_key=self._api_key,
             method='GET',
-            endpoint=f"/v1beta1/engine/credit/remaining_tokens?models={
-                model_id}"
+            endpoint=f"/v1beta1/engine/credit/remaining_tokens?models={model_id}"
         )
         return response['model_tokens'].get(model_id, 0)
 
@@ -587,10 +582,8 @@ class AiEngine:
             api_base_url=self._api_base_url,
             api_key=self._api_key,
             method='PUT',
-            endpoint=f"/v1beta1/function-groups/{
-                function_group_id}/permissions/",
+            endpoint=f"/v1beta1/function-groups/{function_group_id}/permissions/",
             payload=payload
         )
-        logger.debug(f"FG successfully shared: {
-                     function_group_id} with {target_user_email}")
+        logger.debug(f"FG successfully shared: {function_group_id} with {target_user_email}")
         return raw_response
