@@ -37,7 +37,6 @@ class TaskSelectionMessage(AgentJsonMessage):
     text: str
     options: Dict[str, TaskOption]
 
-
     def get_options_keys(self) -> list[TaskOption]:
         return [option for option in self.options]
 
@@ -50,7 +49,6 @@ class DataRequestMessage(AgentJsonMessage):
 class ConfirmationMessage(AgentJsonMessage):
     type: Literal[AgentJsonMessageTypes.CONFIRMATION] = AgentJsonMessageTypes.CONFIRMATION
     text: str
-    model: str
     payload: Dict[str, Any]
 
 
@@ -70,14 +68,16 @@ def is_agent_json_confirmation_message(message_type: str) -> bool:
 
 def is_task_selection_message(message_type: str) -> bool:
     union_of_type = TaskSelectionTypes
-    allowed_values = [literal for lit in get_args(union_of_type) for literal in get_args(lit)]
+    allowed_values = [literal for lit in get_args(
+        union_of_type) for literal in get_args(lit)]
     return message_type.upper() in allowed_values
 
 
 def is_data_request_message(message_type: str) -> bool:
     union_of_type = DataRequestTypes
     if get_origin(union_of_type) is Union:
-        allowed_values = [literal for lit in get_args(union_of_type) for literal in get_args(lit)]
+        allowed_values = [literal for lit in get_args(
+            union_of_type) for literal in get_args(lit)]
     elif get_origin(union_of_type) is Literal:
         allowed_values = get_args(union_of_type)
 
