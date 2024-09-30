@@ -280,7 +280,7 @@ class Session:
                             'id': message['message_id'],
                             'timestamp': message['timestamp'],
                             'text': agent_json['text'],
-                            'options':indexed_task_options
+                            'options': indexed_task_options
                         })
                     )
                 elif is_api_context_json(message_type=agent_json_type, agent_json_text=agent_json['text']):
@@ -289,8 +289,7 @@ class Session:
                             'id': message['message_id'],
                             'timestamp': message['timestamp'],
                             'text': agent_json['text'],
-                            'model': agent_json['context_json']['digest'],
-                            'payload': agent_json['context_json']['args'],
+                            'payload': agent_json['context_json'],
                         })
                     )
                 elif is_data_request_message(message_type=agent_json_type):
@@ -352,7 +351,7 @@ class Session:
             endpoint=f"/v1beta1/engine/chat/sessions/{self.session_id}"
         )
 
-    async def execute_function(self, function_ids: list[str], objective: str, context: str|None = None):
+    async def execute_function(self, function_ids: list[str], objective: str, context: str | None = None):
         await self._submit_message(
             payload=ApiUserMessageExecuteFunctions.model_validate({
                 "functions": function_ids,
@@ -366,7 +365,6 @@ class AiEngine:
     def __init__(self, api_key: str, options: Optional[dict] = None):
         self._api_base_url = options.get('api_base_url') if options and 'api_base_url' in options else default_api_base_url
         self._api_key = api_key
-
 
     ####
     # Function groups
