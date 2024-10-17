@@ -544,7 +544,7 @@ class AiEngine:
             email=opts.get('email') if opts else "",
             functionGroup=function_group,
             preferencesEnabled=False,
-            requestModel=opts.get('model') if opts and 'model' in opts else DefaultModelId
+            requestedModel=opts.get('model') if opts and 'model' in opts else DefaultModelId
         )
         response = await make_api_request(
             api_base_url=self._api_base_url,
