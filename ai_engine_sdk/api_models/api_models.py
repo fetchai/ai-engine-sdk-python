@@ -27,7 +27,7 @@ class ApiNewSessionRequest(BaseModel):
     email: str
     functionGroup: Optional[str] = None
     preferencesEnabled: bool
-    requestModel: str
+    requestedModel: str
 
 
 class ApiUserJsonMessage(ApiMessagePayload):
