@@ -82,8 +82,10 @@ async def make_api_request(
         api_key: str,
         method: str,
         endpoint: str,
-        payload: Optional[dict] = None
+        payload: Optional[dict] = None,
+        params: Optional[dict] = None
 ) -> dict:
+    params = {} if params is None else params
     body = json.dumps(payload) if payload else None
 
     headers = {
@@ -95,7 +97,13 @@ async def make_api_request(
         logger.debug(f"\n\n 📤 Request triggered : {method} {api_base_url}{endpoint}")
         logger.debug(f"{body=}")
         logger.debug("---------------------------\n\n")
-        async with session.request(method, f"{api_base_url}{endpoint}", headers=headers, data=body) as response:
+        async with session.request(
+            method,
+            f"{api_base_url}{endpoint}",
+            headers=headers,
+            data=body,
+            params=params
+        ) as response:
             if not bool(re.search(pattern="^2..$", string=str(response.status))):
                 raise Exception(f"Request failed with status {response.status} to {method}: {endpoint}")
             return await response.json()
@@ -480,12 +488,14 @@ class AiEngine:
         return result
 
 
-    async def get_functions(self) -> list[Function]:
+    async def get_functions(self, params: Optional[dict] = None) -> list[Function]:
+        params = {} if params is None else params
         raw_response: dict = await make_api_request(
             api_base_url=self._api_base_url,
             api_key=self._api_key,
             method='GET',
-            endpoint=f"/v1beta1/functions/"
+            endpoint=f"/v1beta1/functions/",
+            params=params
         )
         return list(
             map(
